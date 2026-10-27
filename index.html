@@ -1,516 +1,430 @@
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pengumpulan Tugas | Analisis dan Desain</title>
+<!-- EDIT DOKUMEN -->
+<section class="edit-doc-container">
+    <div class="edit-doc-header">
+        <div class="edit-doc-icon">📝</div>
+        <div>
+            <h2>Edit Dokumen</h2>
+            <p>Tambah dokumen baru atau ubah daftar dokumen.</p>
+        </div>
+    </div>
+
+    <form id="editDocumentForm">
+        <div class="edit-doc-field">
+            <label for="documentName">Nama dokumen</label>
+            <input
+                type="text"
+                id="documentName"
+                placeholder="Contoh: Analisis Sistem.pdf"
+                required
+            >
+        </div>
+
+        <div class="edit-doc-field">
+            <label for="documentDescription">Keterangan</label>
+            <textarea
+                id="documentDescription"
+                placeholder="Keterangan singkat dokumen"
+                rows="4"
+            ></textarea>
+        </div>
+
+        <div class="edit-doc-field">
+            <label>Unggah file dokumen</label>
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">☁</div>
+                <h3>Pilih file dari komputer Anda</h3>
+                <p>PDF, DOCX, PPTX · Maks. 10 MB</p>
+
+                <label for="documentFile" class="choose-file-button">
+                    ▯ &nbsp; Pilih File
+                </label>
+
+                <input
+                    type="file"
+                    id="documentFile"
+                    accept=".pdf,.docx,.pptx"
+                    hidden
+                >
+            </div>
+
+            <div class="selected-file" id="selectedFile" hidden>
+                <div class="file-icon" id="fileIcon">📄</div>
+
+                <div class="file-details">
+                    <strong id="fileName"></strong>
+                    <span id="fileSize"></span>
+                </div>
+
+                <button
+                    type="button"
+                    class="remove-file-button"
+                    id="removeFile"
+                    aria-label="Hapus pilihan file"
+                >×</button>
+            </div>
+        </div>
+
+        <div class="edit-doc-actions">
+            <button type="submit" class="add-document-button">
+                ＋ &nbsp; Tambah Dokumen
+            </button>
+
+            <button
+                type="button"
+                class="cancel-document-button"
+                id="cancelDocument"
+            >Batal</button>
+        </div>
+    </form>
+</section>
+
 <style>
-:root {
-  --blue: #1769e0;
-  --dark: #17365d;
-  --bg: #f4f7fc;
-  --border: #e1e8f2;
-  --text: #20334f;
-  --muted: #718198;
+.edit-doc-container {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 26px;
+    background: #fff;
+    border: 1px solid #e2eaf5;
+    border-radius: 12px;
+    color: #17385f;
+    font-family: Arial, sans-serif;
 }
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+
+.edit-doc-container * {
+    box-sizing: border-box;
 }
-header {
-  background: var(--dark);
-  color: white;
-  padding: 20px 6%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
+
+.edit-doc-header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding-bottom: 24px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid #e5edf7;
 }
-header h1 { font-size: 21px; margin: 0 0 6px; }
-header p { margin: 0; color: #d1deef; font-size: 13px; }
-button, input, textarea { font: inherit; }
-button {
-  border: 0;
-  border-radius: 8px;
-  padding: 10px 14px;
-  cursor: pointer;
+
+.edit-doc-icon {
+    font-size: 32px;
 }
-button:focus-visible, input:focus-visible {
-  outline: 2px solid #70a8ff;
-  outline-offset: 2px;
+
+.edit-doc-header h2 {
+    margin: 0 0 8px;
+    font-size: 25px;
 }
-.primary { background: var(--blue); color: white; }
-.secondary { background: #eaf1fc; color: var(--dark); }
-.danger { background: #fee2e2; color: #b91c1c; }
-.layout {
-  display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  min-height: calc(100vh - 80px);
+
+.edit-doc-header p {
+    margin: 0;
+    color: #7185a4;
+    font-size: 15px;
 }
-nav {
-  background: white;
-  border-right: 1px solid var(--border);
-  padding: 24px 15px;
+
+.edit-doc-field {
+    margin-bottom: 26px;
 }
-nav button {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: transparent;
-  color: var(--text);
-  padding: 14px;
-  margin-bottom: 8px;
+
+.edit-doc-field > label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 700;
+    font-size: 15px;
 }
-nav button.active, nav button:hover {
-  background: #eaf2ff;
-  color: var(--blue);
+
+.edit-doc-field input[type="text"],
+.edit-doc-field textarea {
+    display: block;
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid #cfdbec;
+    border-radius: 9px;
+    outline: none;
+    font: inherit;
+    font-size: 15px;
+    color: #17385f;
+    background: #fff;
 }
-main { padding: 28px; min-width: 0; }
-.panel {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
+
+.edit-doc-field input[type="text"]:focus,
+.edit-doc-field textarea:focus {
+    border-color: #2878ed;
+    box-shadow: 0 0 0 3px #2878ed18;
 }
-.panel h2 { margin: 0 0 8px; font-size: 19px; }
-.muted { color: var(--muted); font-size: 13px; }
-.search {
-  display: flex;
-  gap: 10px;
-  margin-top: 18px;
+
+.edit-doc-field textarea {
+    min-height: 108px;
+    resize: vertical;
 }
-input, textarea {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px;
-  background: white;
-  color: var(--text);
+
+.upload-area {
+    min-height: 208px;
+    padding: 22px;
+    border: 2px dashed #b8d2ff;
+    border-radius: 10px;
+    background: #f9fbff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: background .2s, border-color .2s;
 }
-.search input { flex: 1; min-width: 0; }
-.documents {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
-  gap: 14px;
-  margin-top: 18px;
+
+.upload-area.drag-over {
+    background: #eaf3ff;
+    border-color: #1769e8;
 }
-.doc {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 17px;
-  min-width: 0;
+
+.upload-icon {
+    color: #2878ed;
+    font-size: 43px;
+    line-height: 1.2;
+    margin-bottom: 8px;
 }
-.doc-icon {
-  width: 42px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  background: #eaf2ff;
-  color: var(--blue);
-  border-radius: 7px;
-  font-size: 23px;
-  margin-bottom: 14px;
+
+.upload-area h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
 }
-.doc h3 { font-size: 15px; overflow-wrap: anywhere; }
-.doc p { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
-.doc-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 15px; }
-.doc-actions button { flex: 1; }
-.admin-only { display: none; }
-body.is-admin .admin-only { display: block; }
-body.is-admin .doc-actions .admin-only { display: inline-block; }
-#editor { display: none; }
-#editor.show { display: block; }
-#editor form { display: grid; gap: 12px; }
-#editor label { font-size: 13px; font-weight: bold; }
-#editor label input, #editor label textarea { margin-top: 6px; }
-#preview {
-  width: 100%;
-  height: 65vh;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: white;
+
+.upload-area p {
+    margin: 0 0 17px;
+    color: #7185a4;
+    font-size: 13px;
 }
-dialog {
-  width: min(700px, 94%);
-  border: 0;
-  border-radius: 12px;
-  padding: 22px;
-  box-shadow: 0 20px 60px #10204033;
+
+.choose-file-button {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 158px;
+    padding: 14px 24px;
+    margin: 0 !important;
+    border-radius: 9px;
+    background: #1769e8;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
 }
-dialog::backdrop { background: #12233d99; }
-.modal-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 14px;
+
+.choose-file-button:hover,
+.add-document-button:hover {
+    background: #1058cc;
 }
-.modal-head h2 { font-size: 18px; margin: 0; }
-footer { text-align: center; padding: 20px; color: var(--muted); font-size: 12px; }
-@media (max-width: 700px) {
-  header { padding: 18px; align-items: flex-start; }
-  header h1 { font-size: 17px; }
-  header button { padding: 9px; font-size: 12px; }
-  .layout { grid-template-columns: 1fr; }
-  nav { display: flex; gap: 8px; padding: 10px; border-right: 0; border-bottom: 1px solid var(--border); }
-  nav button { width: auto; margin: 0; padding: 10px; white-space: nowrap; }
-  main { padding: 14px; }
-  .panel { padding: 15px; }
-  .search { flex-direction: column; }
+
+.selected-file {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 14px 17px;
+    margin-top: 13px;
+    border: 1px solid #e0ebfa;
+    border-radius: 10px;
+    background: #f5f9ff;
+}
+
+.file-icon {
+    font-size: 30px;
+}
+
+.file-details {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.file-details strong {
+    overflow-wrap: anywhere;
+    font-size: 14px;
+}
+
+.file-details span {
+    color: #7185a4;
+    font-size: 12px;
+}
+
+.remove-file-button {
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 50%;
+    background: #edf1f7;
+    color: #29496d;
+    font-size: 23px;
+    cursor: pointer;
+}
+
+.edit-doc-actions {
+    display: flex;
+    gap: 14px;
+    margin-top: 35px;
+}
+
+.add-document-button,
+.cancel-document-button {
+    flex: 1;
+    min-height: 43px;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 9px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.add-document-button {
+    background: #1769e8;
+    color: white;
+    font-weight: 600;
+}
+
+.cancel-document-button {
+    background: #eaf1fd;
+    color: #244b80;
+}
+
+.cancel-document-button:hover {
+    background: #dce8fb;
+}
+
+@media (max-width: 600px) {
+    .edit-doc-container {
+        padding: 17px;
+    }
+
+    .edit-doc-header h2 {
+        font-size: 21px;
+    }
+
+    .edit-doc-actions {
+        flex-direction: column;
+    }
 }
 </style>
-</head>
-<body>
-
-<header>
-  <div>
-    <h1>📚 Pengumpulan Tugas</h1>
-    <p>Analisis dan Desain</p>
-  </div>
-  <button class="secondary" id="loginButton" onclick="openLogin()">Login Admin</button>
-</header>
-
-<div class="layout">
-  <nav>
-    <button class="active" id="dashboardNav" onclick="showPage('dashboard')">
-      🏠 Dashboard
-    </button>
-    <button class="admin-only" id="editNav" onclick="showPage('editor')">
-      📝 Edit Dokumen
-    </button>
-  </nav>
-
-  <main>
-    <section id="dashboard">
-      <div class="panel">
-        <h2>Dashboard</h2>
-        <p class="muted">Cari dan lihat dokumen tugas yang tersedia.</p>
-        <div class="search">
-          <input id="searchInput" type="search"
-            placeholder="Cari nama dokumen..."
-            aria-label="Cari nama dokumen"
-            oninput="renderDocuments()">
-          <button class="secondary" onclick="document.getElementById('searchInput').value='';renderDocuments()">Reset</button>
-        </div>
-      </div>
-
-      <div class="panel">
-        <h2>Daftar Dokumen</h2>
-        <p class="muted" id="documentCount"></p>
-        <div class="documents" id="documentList"></div>
-      </div>
-    </section>
-
-    <section id="editor" class="panel">
-      <h2>Edit Dokumen</h2>
-      <p class="muted">Tambah dokumen baru atau ubah daftar dokumen.</p>
-
-      <form id="documentForm">
-        <label>
-          Nama dokumen
-          <input id="docName" required maxlength="150"
-            placeholder="Contoh: Analisis Sistem.pdf">
-        </label>
-        <label>
-          Keterangan
-          <textarea id="docDescription" rows="2" maxlength="500"
-            placeholder="Keterangan singkat dokumen"></textarea>
-        </label>
-        <label>
-          Alamat file atau URL dokumen
-          <input id="docUrl" type="url" required
-            placeholder="https://... atau alamat file PDF">
-        </label>
-        <p class="muted">
-          Untuk file dalam repository, masukkan alamat relatif seperti
-          docs/analisis-sistem.pdf. Unggah file tersebut ke repository terlebih dahulu.
-        </p>
-        <div class="doc-actions">
-          <button type="submit" class="primary" id="saveButton">Tambah Dokumen</button>
-          <button type="button" class="secondary" onclick="resetForm()">Batal</button>
-        </div>
-      </form>
-    </section>
-  </main>
-</div>
-
-<footer>Pengumpulan Tugas Analisis dan Desain</footer>
-
-<dialog id="loginDialog">
-  <div class="modal-head">
-    <h2>Login Admin</h2>
-    <button class="secondary" onclick="closeDialog('loginDialog')">✕</button>
-  </div>
-  <form id="loginForm">
-    <label>Username
-      <input id="username" autocomplete="username" required>
-    </label>
-    <br>
-    <label>Password
-      <input id="password" type="password"
-        autocomplete="current-password" required>
-    </label>
-    <br>
-    <button class="primary" type="submit">Login</button>
-    <p class="muted" id="loginMessage"></p>
-  </form>
-</dialog>
-
-<dialog id="previewDialog">
-  <div class="modal-head">
-    <h2 id="previewTitle">Pratinjau Dokumen</h2>
-    <button class="secondary" onclick="closeDialog('previewDialog')">Tutup</button>
-  </div>
-  <p class="muted" id="previewMessage"></p>
-  <iframe id="preview" title="Pratinjau dokumen"
-    referrerpolicy="no-referrer"></iframe>
-  <p class="muted">
-    Tidak semua jenis file bisa ditampilkan langsung di browser.
-  </p>
-</dialog>
 
 <script>
-const STORAGE_KEY = "pengumpulanTugasDemo_v1";
+(function () {
+    const form = document.getElementById("editDocumentForm");
+    const fileInput = document.getElementById("documentFile");
+    const selectedFile = document.getElementById("selectedFile");
+    const fileName = document.getElementById("fileName");
+    const fileSize = document.getElementById("fileSize");
+    const fileIcon = document.getElementById("fileIcon");
+    const uploadArea = document.getElementById("uploadArea");
+    const removeFile = document.getElementById("removeFile");
+    const cancelButton = document.getElementById("cancelDocument");
 
-const defaultDocuments = [
-  {
-    id: 1,
-    name: "Contoh Analisis Sistem.pdf",
-    description: "Contoh dokumen analisis sistem.",
-    url: "docs/contoh-analisis-sistem.pdf"
-  },
-  {
-    id: 2,
-    name: "Contoh Desain Database.pdf",
-    description: "Contoh dokumen desain database.",
-    url: "docs/contoh-desain-database.pdf"
-  }
-];
+    if (!form || !fileInput) return;
 
-let documents = loadDocuments();
-let editingId = null;
-let isAdmin = false;
+    let currentFile = null;
+    const maxSize = 10 * 1024 * 1024;
+    const allowedTypes = ["pdf", "docx", "pptx"];
 
-function loadDocuments() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : defaultDocuments.slice();
-  } catch (error) {
-    return defaultDocuments.slice();
-  }
-}
+    function formatSize(bytes) {
+        return bytes >= 1024 * 1024
+            ? (bytes / (1024 * 1024)).toFixed(1) + " MB"
+            : Math.max(1, Math.round(bytes / 1024)) + " KB";
+    }
 
-function saveDocuments() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(documents));
-    return true;
-  } catch (error) {
-    alert("Penyimpanan browser penuh atau tidak tersedia.");
-    return false;
-  }
-}
+    function showFile(file) {
+        if (!file) return;
 
-function escapeHTML(value) {
-  return String(value).replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  })[char]);
-}
+        const extension = file.name.split(".").pop().toLowerCase();
 
-function safeURL(value) {
-  try {
-    const url = new URL(value, window.location.href);
-    if (!["http:", "https:"].includes(url.protocol)) return null;
-    return url.href;
-  } catch (error) {
-    return null;
-  }
-}
+        if (!allowedTypes.includes(extension)) {
+            alert("Format file harus PDF, DOCX, atau PPTX.");
+            fileInput.value = "";
+            return;
+        }
 
-function renderDocuments() {
-  const query = document.getElementById("searchInput").value.toLowerCase().trim();
-  const list = document.getElementById("documentList");
+        if (file.size > maxSize) {
+            alert("Ukuran file maksimal 10 MB.");
+            fileInput.value = "";
+            return;
+        }
 
-  const filtered = documents.filter(doc =>
-    (doc.name + " " + doc.description).toLowerCase().includes(query)
-  );
+        currentFile = file;
+        fileName.textContent = file.name;
+        fileSize.textContent = formatSize(file.size);
+        fileIcon.textContent = extension === "pdf" ? "📕" : "📄";
+        selectedFile.hidden = false;
+    }
 
-  document.getElementById("documentCount").textContent =
-    filtered.length + " dokumen ditemukan";
+    function clearFile() {
+        currentFile = null;
+        fileInput.value = "";
+        selectedFile.hidden = true;
+    }
 
-  if (!filtered.length) {
-    list.innerHTML = '<p class="muted">Dokumen tidak ditemukan.</p>';
-    return;
-  }
-
-  list.innerHTML = filtered.map(doc => `
-    <article class="doc">
-      <div class="doc-icon">📄</div>
-      <h3>${escapeHTML(doc.name)}</h3>
-      <p>${escapeHTML(doc.description || "Tidak ada keterangan.")}</p>
-      <div class="doc-actions">
-        <button class="primary" onclick="previewDocument(${Number(doc.id)})">
-          👁 Lihat
-        </button>
-        ${isAdmin ? `
-          <button class="secondary" onclick="editDocument(${Number(doc.id)})">Edit</button>
-          <button class="danger" onclick="deleteDocument(${Number(doc.id)})">Hapus</button>
-        ` : ""}
-      </div>
-    </article>
-  `).join("");
-}
-
-function openLogin() {
-  document.getElementById("loginMessage").textContent = "";
-  document.getElementById("loginDialog").showModal();
-}
-
-function closeDialog(id) {
-  document.getElementById(id).close();
-}
-
-document.getElementById("loginForm").addEventListener("submit", function(event) {
-  event.preventDefault();
-
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-
-  // DEMO SAJA: kredensial ini terlihat di kode sumber.
-  // Jangan gunakan untuk melindungi dokumen atau data sungguhan.
-  if (username === "admin" && password === "admin123") {
-    isAdmin = true;
-    document.body.classList.add("is-admin");
-    document.getElementById("loginButton").textContent = "Keluar Admin";
-    document.getElementById("loginButton").onclick = logout;
-    closeDialog("loginDialog");
-    renderDocuments();
-    showPage("dashboard");
-  } else {
-    document.getElementById("loginMessage").textContent =
-      "Username atau password salah.";
-  }
-});
-
-function logout() {
-  isAdmin = false;
-  editingId = null;
-  document.body.classList.remove("is-admin");
-  document.getElementById("loginButton").textContent = "Login Admin";
-  document.getElementById("loginButton").onclick = openLogin;
-  resetForm();
-  showPage("dashboard");
-  renderDocuments();
-}
-
-function showPage(page) {
-  if (page === "editor" && !isAdmin) {
-    alert("Menu ini hanya untuk admin.");
-    return;
-  }
-
-  document.getElementById("dashboard").style.display =
-    page === "dashboard" ? "block" : "none";
-  document.getElementById("editor").classList.toggle("show", page === "editor");
-  document.getElementById("dashboardNav").classList.toggle("active", page === "dashboard");
-  document.getElementById("editNav").classList.toggle("active", page === "editor");
-}
-
-function resetForm() {
-  editingId = null;
-  document.getElementById("documentForm").reset();
-  document.getElementById("saveButton").textContent = "Tambah Dokumen";
-}
-
-document.getElementById("documentForm").addEventListener("submit", function(event) {
-  event.preventDefault();
-  if (!isAdmin) return alert("Akses ditolak.");
-
-  const name = document.getElementById("docName").value.trim();
-  const description = document.getElementById("docDescription").value.trim();
-  const rawURL = document.getElementById("docUrl").value.trim();
-  const url = safeURL(rawURL);
-
-  if (!name || !url) {
-    alert("Nama dan alamat dokumen harus valid.");
-    return;
-  }
-
-  if (editingId !== null) {
-    documents = documents.map(doc =>
-      doc.id === editingId ? { ...doc, name, description, url } : doc
-    );
-  } else {
-    documents.push({
-      id: Date.now(),
-      name,
-      description,
-      url
+    fileInput.addEventListener("change", function () {
+        showFile(fileInput.files[0]);
     });
-  }
 
-  if (!saveDocuments()) return;
+    removeFile.addEventListener("click", clearFile);
 
-  resetForm();
-  renderDocuments();
-  showPage("dashboard");
-});
+    uploadArea.addEventListener("dragover", function (event) {
+        event.preventDefault();
+        uploadArea.classList.add("drag-over");
+    });
 
-function editDocument(id) {
-  if (!isAdmin) return;
+    uploadArea.addEventListener("dragleave", function () {
+        uploadArea.classList.remove("drag-over");
+    });
 
-  const doc = documents.find(item => item.id === id);
-  if (!doc) return;
+    uploadArea.addEventListener("drop", function (event) {
+        event.preventDefault();
+        uploadArea.classList.remove("drag-over");
 
-  editingId = id;
-  document.getElementById("docName").value = doc.name;
-  document.getElementById("docDescription").value = doc.description || "";
-  document.getElementById("docUrl").value = doc.url;
-  document.getElementById("saveButton").textContent = "Simpan Perubahan";
-  showPage("editor");
-}
+        const file = event.dataTransfer.files[0];
+        if (!file) return;
 
-function deleteDocument(id) {
-  if (!isAdmin) return;
+        const transfer = new DataTransfer();
+        transfer.items.add(file);
+        fileInput.files = transfer.files;
+        showFile(file);
+    });
 
-  const doc = documents.find(item => item.id === id);
-  if (!doc || !confirm('Hapus "' + doc.name + '" dari daftar?')) return;
+    cancelButton.addEventListener("click", function () {
+        form.reset();
+        clearFile();
+    });
 
-  documents = documents.filter(item => item.id !== id);
-  if (saveDocuments()) renderDocuments();
-}
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
 
-function previewDocument(id) {
-  const doc = documents.find(item => item.id === id);
-  if (!doc) return;
+        const name = document.getElementById("documentName").value.trim();
+        const description = document
+            .getElementById("documentDescription").value.trim();
 
-  const url = safeURL(doc.url);
-  if (!url) {
-    alert("Alamat dokumen tidak valid.");
-    return;
-  }
+        if (!name) {
+            alert("Nama dokumen harus diisi.");
+            return;
+        }
 
-  document.getElementById("previewTitle").textContent = doc.name;
-  document.getElementById("previewMessage").textContent =
-    "Jika dokumen tidak tampil, format file atau server mungkin tidak mendukung pratinjau.";
-  document.getElementById("preview").src = url;
-  document.getElementById("previewDialog").showModal();
-}
+        if (!currentFile) {
+            alert("Silakan pilih file dokumen terlebih dahulu.");
+            return;
+        }
 
-document.getElementById("previewDialog").addEventListener("close", function() {
-  document.getElementById("preview").src = "about:blank";
-});
+        /*
+          TITIK INTEGRASI:
+          Hubungkan currentFile, name, dan description ke
+          backend Google Drive yang memverifikasi admin.
 
-renderDocuments();
+          Jangan menganggap file sudah tersimpan hanya karena
+          berhasil dipilih di komputer.
+        */
+
+        alert(
+            "Validasi berhasil.\n\n" +
+            "Nama: " + name + "\n" +
+            "File: " + currentFile.name +
+            "\n\nFile belum diunggah ke Google Drive. " +
+            "Hubungkan form ini ke backend terlebih dahulu."
+        );
+    });
+})();
 </script>
-</body>
-</html>
