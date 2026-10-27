@@ -1,0 +1,516 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pengumpulan Tugas | Analisis dan Desain</title>
+<style>
+:root {
+  --blue: #1769e0;
+  --dark: #17365d;
+  --bg: #f4f7fc;
+  --border: #e1e8f2;
+  --text: #20334f;
+  --muted: #718198;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+header {
+  background: var(--dark);
+  color: white;
+  padding: 20px 6%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+header h1 { font-size: 21px; margin: 0 0 6px; }
+header p { margin: 0; color: #d1deef; font-size: 13px; }
+button, input, textarea { font: inherit; }
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+button:focus-visible, input:focus-visible {
+  outline: 2px solid #70a8ff;
+  outline-offset: 2px;
+}
+.primary { background: var(--blue); color: white; }
+.secondary { background: #eaf1fc; color: var(--dark); }
+.danger { background: #fee2e2; color: #b91c1c; }
+.layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: calc(100vh - 80px);
+}
+nav {
+  background: white;
+  border-right: 1px solid var(--border);
+  padding: 24px 15px;
+}
+nav button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: var(--text);
+  padding: 14px;
+  margin-bottom: 8px;
+}
+nav button.active, nav button:hover {
+  background: #eaf2ff;
+  color: var(--blue);
+}
+main { padding: 28px; min-width: 0; }
+.panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.panel h2 { margin: 0 0 8px; font-size: 19px; }
+.muted { color: var(--muted); font-size: 13px; }
+.search {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+input, textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: white;
+  color: var(--text);
+}
+.search input { flex: 1; min-width: 0; }
+.documents {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+.doc {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 17px;
+  min-width: 0;
+}
+.doc-icon {
+  width: 42px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  background: #eaf2ff;
+  color: var(--blue);
+  border-radius: 7px;
+  font-size: 23px;
+  margin-bottom: 14px;
+}
+.doc h3 { font-size: 15px; overflow-wrap: anywhere; }
+.doc p { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.doc-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 15px; }
+.doc-actions button { flex: 1; }
+.admin-only { display: none; }
+body.is-admin .admin-only { display: block; }
+body.is-admin .doc-actions .admin-only { display: inline-block; }
+#editor { display: none; }
+#editor.show { display: block; }
+#editor form { display: grid; gap: 12px; }
+#editor label { font-size: 13px; font-weight: bold; }
+#editor label input, #editor label textarea { margin-top: 6px; }
+#preview {
+  width: 100%;
+  height: 65vh;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+}
+dialog {
+  width: min(700px, 94%);
+  border: 0;
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 20px 60px #10204033;
+}
+dialog::backdrop { background: #12233d99; }
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.modal-head h2 { font-size: 18px; margin: 0; }
+footer { text-align: center; padding: 20px; color: var(--muted); font-size: 12px; }
+@media (max-width: 700px) {
+  header { padding: 18px; align-items: flex-start; }
+  header h1 { font-size: 17px; }
+  header button { padding: 9px; font-size: 12px; }
+  .layout { grid-template-columns: 1fr; }
+  nav { display: flex; gap: 8px; padding: 10px; border-right: 0; border-bottom: 1px solid var(--border); }
+  nav button { width: auto; margin: 0; padding: 10px; white-space: nowrap; }
+  main { padding: 14px; }
+  .panel { padding: 15px; }
+  .search { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📚 Pengumpulan Tugas</h1>
+    <p>Analisis dan Desain</p>
+  </div>
+  <button class="secondary" id="loginButton" onclick="openLogin()">Login Admin</button>
+</header>
+
+<div class="layout">
+  <nav>
+    <button class="active" id="dashboardNav" onclick="showPage('dashboard')">
+      🏠 Dashboard
+    </button>
+    <button class="admin-only" id="editNav" onclick="showPage('editor')">
+      📝 Edit Dokumen
+    </button>
+  </nav>
+
+  <main>
+    <section id="dashboard">
+      <div class="panel">
+        <h2>Dashboard</h2>
+        <p class="muted">Cari dan lihat dokumen tugas yang tersedia.</p>
+        <div class="search">
+          <input id="searchInput" type="search"
+            placeholder="Cari nama dokumen..."
+            aria-label="Cari nama dokumen"
+            oninput="renderDocuments()">
+          <button class="secondary" onclick="document.getElementById('searchInput').value='';renderDocuments()">Reset</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Daftar Dokumen</h2>
+        <p class="muted" id="documentCount"></p>
+        <div class="documents" id="documentList"></div>
+      </div>
+    </section>
+
+    <section id="editor" class="panel">
+      <h2>Edit Dokumen</h2>
+      <p class="muted">Tambah dokumen baru atau ubah daftar dokumen.</p>
+
+      <form id="documentForm">
+        <label>
+          Nama dokumen
+          <input id="docName" required maxlength="150"
+            placeholder="Contoh: Analisis Sistem.pdf">
+        </label>
+        <label>
+          Keterangan
+          <textarea id="docDescription" rows="2" maxlength="500"
+            placeholder="Keterangan singkat dokumen"></textarea>
+        </label>
+        <label>
+          Alamat file atau URL dokumen
+          <input id="docUrl" type="url" required
+            placeholder="https://... atau alamat file PDF">
+        </label>
+        <p class="muted">
+          Untuk file dalam repository, masukkan alamat relatif seperti
+          docs/analisis-sistem.pdf. Unggah file tersebut ke repository terlebih dahulu.
+        </p>
+        <div class="doc-actions">
+          <button type="submit" class="primary" id="saveButton">Tambah Dokumen</button>
+          <button type="button" class="secondary" onclick="resetForm()">Batal</button>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>
+
+<footer>Pengumpulan Tugas Analisis dan Desain</footer>
+
+<dialog id="loginDialog">
+  <div class="modal-head">
+    <h2>Login Admin</h2>
+    <button class="secondary" onclick="closeDialog('loginDialog')">✕</button>
+  </div>
+  <form id="loginForm">
+    <label>Username
+      <input id="username" autocomplete="username" required>
+    </label>
+    <br>
+    <label>Password
+      <input id="password" type="password"
+        autocomplete="current-password" required>
+    </label>
+    <br>
+    <button class="primary" type="submit">Login</button>
+    <p class="muted" id="loginMessage"></p>
+  </form>
+</dialog>
+
+<dialog id="previewDialog">
+  <div class="modal-head">
+    <h2 id="previewTitle">Pratinjau Dokumen</h2>
+    <button class="secondary" onclick="closeDialog('previewDialog')">Tutup</button>
+  </div>
+  <p class="muted" id="previewMessage"></p>
+  <iframe id="preview" title="Pratinjau dokumen"
+    referrerpolicy="no-referrer"></iframe>
+  <p class="muted">
+    Tidak semua jenis file bisa ditampilkan langsung di browser.
+  </p>
+</dialog>
+
+<script>
+const STORAGE_KEY = "pengumpulanTugasDemo_v1";
+
+const defaultDocuments = [
+  {
+    id: 1,
+    name: "Contoh Analisis Sistem.pdf",
+    description: "Contoh dokumen analisis sistem.",
+    url: "docs/contoh-analisis-sistem.pdf"
+  },
+  {
+    id: 2,
+    name: "Contoh Desain Database.pdf",
+    description: "Contoh dokumen desain database.",
+    url: "docs/contoh-desain-database.pdf"
+  }
+];
+
+let documents = loadDocuments();
+let editingId = null;
+let isAdmin = false;
+
+function loadDocuments() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : defaultDocuments.slice();
+  } catch (error) {
+    return defaultDocuments.slice();
+  }
+}
+
+function saveDocuments() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(documents));
+    return true;
+  } catch (error) {
+    alert("Penyimpanan browser penuh atau tidak tersedia.");
+    return false;
+  }
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function safeURL(value) {
+  try {
+    const url = new URL(value, window.location.href);
+    if (!["http:", "https:"].includes(url.protocol)) return null;
+    return url.href;
+  } catch (error) {
+    return null;
+  }
+}
+
+function renderDocuments() {
+  const query = document.getElementById("searchInput").value.toLowerCase().trim();
+  const list = document.getElementById("documentList");
+
+  const filtered = documents.filter(doc =>
+    (doc.name + " " + doc.description).toLowerCase().includes(query)
+  );
+
+  document.getElementById("documentCount").textContent =
+    filtered.length + " dokumen ditemukan";
+
+  if (!filtered.length) {
+    list.innerHTML = '<p class="muted">Dokumen tidak ditemukan.</p>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(doc => `
+    <article class="doc">
+      <div class="doc-icon">📄</div>
+      <h3>${escapeHTML(doc.name)}</h3>
+      <p>${escapeHTML(doc.description || "Tidak ada keterangan.")}</p>
+      <div class="doc-actions">
+        <button class="primary" onclick="previewDocument(${Number(doc.id)})">
+          👁 Lihat
+        </button>
+        ${isAdmin ? `
+          <button class="secondary" onclick="editDocument(${Number(doc.id)})">Edit</button>
+          <button class="danger" onclick="deleteDocument(${Number(doc.id)})">Hapus</button>
+        ` : ""}
+      </div>
+    </article>
+  `).join("");
+}
+
+function openLogin() {
+  document.getElementById("loginMessage").textContent = "";
+  document.getElementById("loginDialog").showModal();
+}
+
+function closeDialog(id) {
+  document.getElementById(id).close();
+}
+
+document.getElementById("loginForm").addEventListener("submit", function(event) {
+  event.preventDefault();
+
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  // DEMO SAJA: kredensial ini terlihat di kode sumber.
+  // Jangan gunakan untuk melindungi dokumen atau data sungguhan.
+  if (username === "admin" && password === "admin123") {
+    isAdmin = true;
+    document.body.classList.add("is-admin");
+    document.getElementById("loginButton").textContent = "Keluar Admin";
+    document.getElementById("loginButton").onclick = logout;
+    closeDialog("loginDialog");
+    renderDocuments();
+    showPage("dashboard");
+  } else {
+    document.getElementById("loginMessage").textContent =
+      "Username atau password salah.";
+  }
+});
+
+function logout() {
+  isAdmin = false;
+  editingId = null;
+  document.body.classList.remove("is-admin");
+  document.getElementById("loginButton").textContent = "Login Admin";
+  document.getElementById("loginButton").onclick = openLogin;
+  resetForm();
+  showPage("dashboard");
+  renderDocuments();
+}
+
+function showPage(page) {
+  if (page === "editor" && !isAdmin) {
+    alert("Menu ini hanya untuk admin.");
+    return;
+  }
+
+  document.getElementById("dashboard").style.display =
+    page === "dashboard" ? "block" : "none";
+  document.getElementById("editor").classList.toggle("show", page === "editor");
+  document.getElementById("dashboardNav").classList.toggle("active", page === "dashboard");
+  document.getElementById("editNav").classList.toggle("active", page === "editor");
+}
+
+function resetForm() {
+  editingId = null;
+  document.getElementById("documentForm").reset();
+  document.getElementById("saveButton").textContent = "Tambah Dokumen";
+}
+
+document.getElementById("documentForm").addEventListener("submit", function(event) {
+  event.preventDefault();
+  if (!isAdmin) return alert("Akses ditolak.");
+
+  const name = document.getElementById("docName").value.trim();
+  const description = document.getElementById("docDescription").value.trim();
+  const rawURL = document.getElementById("docUrl").value.trim();
+  const url = safeURL(rawURL);
+
+  if (!name || !url) {
+    alert("Nama dan alamat dokumen harus valid.");
+    return;
+  }
+
+  if (editingId !== null) {
+    documents = documents.map(doc =>
+      doc.id === editingId ? { ...doc, name, description, url } : doc
+    );
+  } else {
+    documents.push({
+      id: Date.now(),
+      name,
+      description,
+      url
+    });
+  }
+
+  if (!saveDocuments()) return;
+
+  resetForm();
+  renderDocuments();
+  showPage("dashboard");
+});
+
+function editDocument(id) {
+  if (!isAdmin) return;
+
+  const doc = documents.find(item => item.id === id);
+  if (!doc) return;
+
+  editingId = id;
+  document.getElementById("docName").value = doc.name;
+  document.getElementById("docDescription").value = doc.description || "";
+  document.getElementById("docUrl").value = doc.url;
+  document.getElementById("saveButton").textContent = "Simpan Perubahan";
+  showPage("editor");
+}
+
+function deleteDocument(id) {
+  if (!isAdmin) return;
+
+  const doc = documents.find(item => item.id === id);
+  if (!doc || !confirm('Hapus "' + doc.name + '" dari daftar?')) return;
+
+  documents = documents.filter(item => item.id !== id);
+  if (saveDocuments()) renderDocuments();
+}
+
+function previewDocument(id) {
+  const doc = documents.find(item => item.id === id);
+  if (!doc) return;
+
+  const url = safeURL(doc.url);
+  if (!url) {
+    alert("Alamat dokumen tidak valid.");
+    return;
+  }
+
+  document.getElementById("previewTitle").textContent = doc.name;
+  document.getElementById("previewMessage").textContent =
+    "Jika dokumen tidak tampil, format file atau server mungkin tidak mendukung pratinjau.";
+  document.getElementById("preview").src = url;
+  document.getElementById("previewDialog").showModal();
+}
+
+document.getElementById("previewDialog").addEventListener("close", function() {
+  document.getElementById("preview").src = "about:blank";
+});
+
+renderDocuments();
+</script>
+</body>
+</html>
