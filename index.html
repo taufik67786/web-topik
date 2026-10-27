@@ -1,989 +1,587 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ruang Dokumen</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1d4ed8">
+<title>Ruang Dokumen | Pengumpulan Tugas</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      background: #f3f6fc;
-      color: #172033;
-      line-height: 1.6;
-    }
-
-    header {
-      padding: 28px 7%;
-      color: white;
-      background: linear-gradient(135deg, #173b8e, #3478f6);
-    }
-
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .brand {
-      font-size: 23px;
-      font-weight: bold;
-    }
-
-    .hero {
-      padding: 55px 0 40px;
-      max-width: 700px;
-    }
-
-    .hero h1 {
-      font-size: clamp(30px, 5vw, 46px);
-      line-height: 1.2;
-      margin-bottom: 15px;
-    }
-
-    .hero p {
-      color: #e0eaff;
-      font-size: 16px;
-    }
-
-    main {
-      max-width: 1100px;
-      margin: -25px auto 0;
-      padding: 0 20px 40px;
-    }
-
-    .card {
-      background: white;
-      border: 1px solid #e6eaf2;
-      border-radius: 17px;
-      padding: 25px;
-      margin-bottom: 22px;
-      box-shadow: 0 8px 28px rgba(20, 40, 80, 0.06);
-    }
-
-    .section-heading {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    h2 {
-      font-size: 21px;
-    }
-
-    .muted {
-      color: #6b7280;
-      font-size: 14px;
-      margin-top: 4px;
-    }
-
-    .badge {
-      background: #eaf2ff;
-      color: #215bd5;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: bold;
-      white-space: nowrap;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-
-    .full {
-      grid-column: 1 / -1;
-    }
-
-    label {
-      font-size: 14px;
-      font-weight: bold;
-    }
-
-    input, textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #d8dfeb;
-      border-radius: 10px;
-      font: inherit;
-      outline: none;
-    }
-
-    input:focus, textarea:focus {
-      border-color: #3478f6;
-      box-shadow: 0 0 0 3px #3478f61a;
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 85px;
-    }
-
-    .btn {
-      border: none;
-      border-radius: 9px;
-      padding: 11px 16px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 14px;
-      text-decoration: none;
-      display: inline-block;
-    }
-
-    .primary {
-      background: #2864e8;
-      color: white;
-    }
-
-    .primary:hover {
-      background: #174bc2;
-    }
-
-    .secondary {
-      background: #eef1f6;
-      color: #344054;
-    }
-
-    .danger {
-      background: #fff0f0;
-      color: #c62828;
-    }
-
-    .logout {
-      color: white;
-      border: 1px solid #ffffff80;
-      background: #ffffff18;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 9px;
-      margin-top: 16px;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .status {
-      padding: 11px 13px;
-      border-radius: 9px;
-      font-size: 14px;
-      margin-top: 14px;
-      overflow-wrap: anywhere;
-    }
-
-    .error {
-      color: #991b1b;
-      background: #fef2f2;
-    }
-
-    .success {
-      color: #166534;
-      background: #f0fdf4;
-    }
-
-    .info {
-      color: #1e40af;
-      background: #eff6ff;
-    }
-
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .toolbar input {
-      flex: 1;
-    }
-
-    #docCount {
-      color: #6b7280;
-      font-size: 13px;
-      white-space: nowrap;
-    }
-
-    .documents {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 15px;
-    }
-
-    .document {
-      border: 1px solid #e3e8f1;
-      border-radius: 13px;
-      padding: 17px;
-      display: flex;
-      gap: 13px;
-      min-width: 0;
-      background: white;
-    }
-
-    .file-icon {
-      width: 45px;
-      height: 45px;
-      flex-shrink: 0;
-      display: grid;
-      place-items: center;
-      border-radius: 12px;
-      background: #eaf2ff;
-      font-size: 23px;
-    }
-
-    .doc-content {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .doc-content h3 {
-      font-size: 16px;
-      overflow-wrap: anywhere;
-      margin-bottom: 5px;
-    }
-
-    .description {
-      color: #6b7280;
-      font-size: 13px;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-
-    .meta {
-      color: #98a2b3;
-      font-size: 11px;
-      margin-top: 9px;
-      overflow-wrap: anywhere;
-    }
-
-    .doc-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      margin-top: 12px;
-    }
-
-    .small-btn {
-      display: inline-block;
-      border: none;
-      border-radius: 7px;
-      padding: 7px 10px;
-      background: #eaf2ff;
-      color: #215bd5;
-      font-size: 12px;
-      font-weight: bold;
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    .empty {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 40px 15px;
-      border: 1px dashed #cbd5e1;
-      border-radius: 12px;
-      color: #6b7280;
-    }
-
-    footer {
-      text-align: center;
-      color: #8a94a6;
-      font-size: 13px;
-      padding: 20px;
-    }
-
-    @media (max-width: 650px) {
-      header {
-        padding: 22px 18px;
-      }
-
-      .hero {
-        padding: 38px 0 35px;
-      }
-
-      main {
-        padding: 0 12px 30px;
-      }
-
-      .card {
-        padding: 18px;
-      }
-
-      .form-grid,
-      .documents {
-        grid-template-columns: 1fr;
-      }
-
-      .toolbar {
-        align-items: stretch;
-        flex-direction: column;
-      }
-
-      .section-heading {
-        align-items: flex-start;
-      }
-    }
-  </style>
+<style>
+:root{--blue:#2563eb;--dark:#172554;--muted:#64748b;--line:#e2e8f0;--bg:#f4f7fb}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--dark);background:var(--bg)}
+.hero{padding:26px max(5%,calc((100% - 1120px)/2)) 42px;color:#fff;background:radial-gradient(circle at 85% 10%,#60a5fa,transparent 30%),linear-gradient(130deg,#172554,#1d4ed8 70%,#3b82f6)}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:32px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:850}
+.brand-icon{display:grid;place-items:center;width:42px;height:42px;border:1px solid #ffffff50;border-radius:14px;background:#ffffff24;font-size:22px}
+.pill{border:1px solid #ffffff50;background:#ffffff20;border-radius:99px;padding:8px 12px;font-size:12px;font-weight:750}
+.hero h1{font-size:clamp(30px,5vw,46px);line-height:1.1;letter-spacing:-1px;margin:0 0 12px}
+.hero p{max-width:650px;color:#dbeafe;line-height:1.7;margin:0}
+.navwrap{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line)}
+nav{max-width:1120px;margin:auto;padding:15px 22px;display:flex;justify-content:space-between;gap:14px}
+nav a{text-decoration:none;color:#475569;font-weight:750;font-size:14px;margin-right:20px}
+nav a:hover{color:var(--blue)}
+#roleLabel{font-size:12px;color:var(--muted);font-weight:750}
+main{max-width:1120px;width:92%;margin:28px auto 50px}
+.intro{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:18px}
+h2{font-size:23px;letter-spacing:-.4px;margin:0 0 8px}
+.sub{font-size:14px;line-height:1.6;color:var(--muted);margin:0}
+.count{white-space:nowrap;border:1px solid #dbeafe;background:#eff6ff;color:#1d4ed8;border-radius:12px;padding:10px 13px;font-size:13px;font-weight:800}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.panel{background:#fff;border:1px solid var(--line);border-radius:19px;padding:23px;box-shadow:0 8px 28px #0f172a08;margin-bottom:20px}
+.panelhead{display:flex;gap:12px;align-items:flex-start;margin-bottom:17px}
+.panelicon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:13px;background:#eff6ff;color:var(--blue);font-size:20px}
+.panelhead h2{font-size:19px;margin:1px 0 5px}
+label{display:block;font-size:13px;font-weight:750;margin:15px 0 7px;color:#334155}
+input,textarea{width:100%;font:inherit;font-size:14px;padding:12px 13px;border:1px solid #cbd5e1;border-radius:11px;background:white;color:var(--dark);outline:none}
+input:focus,textarea:focus{border-color:#60a5fa;box-shadow:0 0 0 4px #dbeafe}
+textarea{min-height:85px;resize:vertical}
+input[type=file]{padding:10px;background:#f8fafc}
+.hint{font-size:12px;color:var(--muted);line-height:1.6;margin:8px 0 0}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:17px}
+button,.filelink{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:11px 14px;background:var(--blue);color:#fff;text-decoration:none;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+button:hover,.filelink:hover{background:#1d4ed8}
+button:disabled{opacity:.6;cursor:wait}
+.light{background:#eff6ff;color:#1d4ed8}
+.light:hover{background:#dbeafe}
+.danger{background:#fff1f2;color:#be123c}
+.danger:hover{background:#ffe4e6}
+.mutedbtn{background:#e2e8f0;color:#334155}
+.mutedbtn:hover{background:#cbd5e1}
+.document-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}
+.doc{min-width:0;border:1px solid var(--line);border-radius:15px;padding:17px;background:linear-gradient(#fff,#fbfdff);display:flex;flex-direction:column;gap:10px}
+.filebadge{width:42px;height:44px;display:grid;place-items:center;background:#fee2e2;color:#b91c1c;border-radius:10px;font-size:10px;font-weight:900}
+.doctitle{font-size:16px;line-height:1.4;margin:0;overflow-wrap:anywhere}
+.docdesc{font-size:13px;line-height:1.6;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;margin:0;flex:1}
+.meta{font-size:11px;color:#94a3b8;overflow-wrap:anywhere}
+.docactions{display:flex;gap:8px;flex-wrap:wrap;margin-top:3px}
+.docactions .filelink{font-size:12px;padding:10px 12px}
+.status{font-size:13px;line-height:1.6;margin:12px 0 0;overflow-wrap:anywhere;color:var(--muted)}
+.empty{text-align:center;padding:28px 16px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:14px;color:var(--muted);line-height:1.7;margin-top:18px}
+.owner{position:sticky;top:80px}
+.ownerstate{display:flex;align-items:center;gap:10px;padding:12px;background:#f8fafc;border-radius:12px;margin-top:14px}
+.avatar{width:36px;height:36px;display:grid;place-items:center;background:#dbeafe;color:#1d4ed8;border-radius:50%;font-weight:900}
+.ownerstate strong{display:block;font-size:13px}
+.ownerstate span{font-size:12px;color:var(--muted)}
+.feature{display:flex;gap:9px;margin-top:14px;font-size:12px;color:#475569;line-height:1.5}
+.feature b{color:#15803d}
+footer{text-align:center;padding:25px;color:#94a3b8;font-size:12px}
+[hidden]{display:none!important}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.owner{position:static}}
+@media(max-width:560px){.hero{padding:22px 5% 32px}.topline{margin-bottom:27px}nav{padding:13px 5%;flex-wrap:wrap}.intro{align-items:flex-start;flex-direction:column}main{margin-top:22px}.panel{padding:17px}.document-list{grid-template-columns:1fr}.pill{font-size:10px}}
+</style>
 </head>
 
 <body>
-
-<header>
-  <div class="navbar">
-    <div class="brand">📚 Ruang Dokumen</div>
-    <button id="logoutBtn" class="btn logout hidden" type="button">
-      Keluar
-    </button>
+<header class="hero">
+  <div class="topline">
+    <div class="brand">
+      <div class="brand-icon">▤</div>
+      <span>Ruang Dokumen</span>
+    </div>
+    <span class="pill">taufik_240511206</span>
   </div>
-
-  <div class="hero">
-    <h1>Semua dokumen,<br>lebih mudah ditemukan.</h1>
-    <p>
-      Pusat penyimpanan dokumen digital yang praktis.
-      Pengunjung dapat melihat dan membuka dokumen yang tersedia.
-    </p>
-  </div>
+  <h1>Semua dokumen tugas,<br>lebih rapi dan mudah diakses.</h1>
+  <p>Temukan, buka, dan lihat dokumen yang dibagikan.</p>
 </header>
 
-<main>
-
-  <!-- AREA PEMILIK -->
-  <section class="card" id="ownerPanel">
-    <div class="section-heading">
-      <div>
-        <h2 id="ownerHeading">Area Pemilik</h2>
-        <p class="muted" id="ownerSubtitle">
-          Masuk untuk mengelola dokumen.
-        </p>
-      </div>
-      <span class="badge" id="ownerBadge">🔐 Khusus pemilik</span>
+<div class="navwrap">
+  <nav>
+    <div>
+      <a href="#daftarDokumen">⌂ &nbsp;Dokumen</a>
+      <a href="#areaPemilik">♙ &nbsp;Area Pemilik</a>
     </div>
+    <span id="roleLabel">Mode Pengunjung</span>
+  </nav>
+</div>
 
-    <form id="loginForm">
-      <div class="form-grid">
-        <div class="field full">
-          <label for="email">Email pemilik</label>
-          <input
-            id="email"
-            type="email"
-            placeholder="Masukkan email"
-            autocomplete="username"
-            required
-          >
-        </div>
+<main>
+  <div class="intro" id="daftarDokumen">
+    <div>
+      <h2>Dokumen tersedia</h2>
+      <p class="sub">Pilih dokumen untuk membuka atau melihatnya.</p>
+    </div>
+    <div class="count" id="documentCount">Memuat dokumen…</div>
+  </div>
 
-        <div class="field full">
-          <label for="password">Kata sandi</label>
-          <input
-            id="password"
-            type="password"
-            placeholder="Masukkan kata sandi"
-            autocomplete="current-password"
-            required
-          >
+  <div class="layout">
+    <section class="panel">
+      <label for="documentSearch">Cari dokumen</label>
+      <input id="documentSearch" type="search"
+        placeholder="Ketik nama, keterangan, atau nama file…"
+        autocomplete="off">
+
+      <div id="listStatus" class="status" role="status">Sedang memuat dokumen…</div>
+      <div id="documentsList" class="document-list"></div>
+    </section>
+
+    <aside class="panel owner" id="areaPemilik">
+      <div class="panelhead">
+        <div class="panelicon">♙</div>
+        <div>
+          <h2>Area Pemilik</h2>
+          <p class="sub">Masuk untuk menambah, mengedit, atau menghapus dokumen.</p>
         </div>
       </div>
 
-      <div class="actions">
-        <button type="submit" class="btn primary">Masuk sebagai pemilik</button>
-      </div>
-    </form>
+      <form id="loginForm">
+        <label for="email">Email pemilik</label>
+        <input id="email" type="email" autocomplete="username"
+          placeholder="Email akun pemilik" required>
 
-    <div id="manageArea" class="hidden">
-      <div class="status info">
-        Anda masuk sebagai pemilik. Silakan unggah atau kelola dokumen.
-      </div>
-
-      <form id="uploadForm" style="margin-top:20px">
-        <input type="hidden" id="editId">
-        <input type="hidden" id="oldFilePath">
-
-        <div class="form-grid">
-          <div class="field full">
-            <label for="title">Judul dokumen</label>
-            <input
-              id="title"
-              type="text"
-              placeholder="Contoh: Materi Pemrograman Web"
-              maxlength="150"
-              required
-            >
-          </div>
-
-          <div class="field full">
-            <label for="description">Keterangan dokumen</label>
-            <textarea
-              id="description"
-              placeholder="Tuliskan keterangan dokumen (opsional)"
-              maxlength="1000"
-            ></textarea>
-          </div>
-
-          <div class="field full">
-            <label for="file">Pilih file</label>
-            <input
-              id="file"
-              type="file"
-              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.jpg,.jpeg,.png"
-            >
-            <p class="muted">
-              Saat mengedit, pilih file baru hanya jika ingin mengganti file lama.
-            </p>
-          </div>
-        </div>
+        <label for="password">Kata sandi</label>
+        <input id="password" type="password" autocomplete="current-password"
+          placeholder="Masukkan kata sandi" required>
 
         <div class="actions">
-          <button id="saveBtn" type="submit" class="btn primary">
-            + Unggah dokumen
-          </button>
-
-          <button id="cancelBtn" type="button" class="btn secondary hidden">
-            Batal mengedit
-          </button>
+          <button type="submit" id="loginButton">Masuk sebagai pemilik →</button>
         </div>
       </form>
-    </div>
 
-    <div id="loginStatus"></div>
-  </section>
-
-  <!-- AREA PENGUNJUNG -->
-  <section class="card">
-    <div class="section-heading">
-      <div>
-        <h2>Dokumen Tersedia</h2>
-        <p class="muted">
-          Pilih dokumen untuk melihat atau membukanya.
-        </p>
+      <div id="ownerLoggedIn" hidden>
+        <div class="ownerstate">
+          <div class="avatar">P</div>
+          <div>
+            <strong>Pemilik masuk</strong>
+            <span>Akses pengelolaan aktif</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="mutedbtn" id="logoutButton">Keluar / Logout</button>
+        </div>
       </div>
-      <span class="badge">🌐 Pengunjung</span>
-    </div>
 
-    <div class="toolbar">
-      <input
-        id="searchInput"
-        type="search"
-        placeholder="🔎 Cari dokumen..."
-      >
-      <span id="docCount">Memuat dokumen...</span>
-    </div>
+      <p id="authStatus" class="status" role="status">
+        Pengunjung bisa melihat dokumen tanpa login.
+      </p>
 
-    <div id="publicStatus"></div>
+      <div class="feature"><b>✓</b><span>Pengunjung dapat membuka dokumen yang dibagikan.</span></div>
+      <div class="feature"><b>✓</b><span>Hanya akun pemilik yang diizinkan dapat mengelola dokumen.</span></div>
 
-    <div class="documents" id="docList">
-      <div class="empty">Memuat daftar dokumen...</div>
-    </div>
-  </section>
+      <section id="formPanel" hidden style="margin-top:24px;padding-top:22px;border-top:1px solid var(--line)">
+        <div class="panelhead">
+          <div class="panelicon">＋</div>
+          <div>
+            <h2 id="formTitle">Tambah dokumen</h2>
+            <p class="sub">Unggah file PDF, DOCX, atau PPTX.</p>
+          </div>
+        </div>
 
+        <form id="documentForm">
+          <label for="documentName">Nama dokumen</label>
+          <input id="documentName" type="text"
+            placeholder="Contoh: Materi Basis Data" required>
+
+          <label for="documentDescription">Keterangan</label>
+          <textarea id="documentDescription"
+            placeholder="Penjelasan singkat dokumen"></textarea>
+
+          <label for="documentFile">Pilih file</label>
+          <input id="documentFile" type="file" accept=".pdf,.docx,.pptx">
+
+          <p class="hint">Format: PDF, DOCX, PPTX. Maksimal 10 MB. Saat mengedit, pilih file baru hanya jika ingin menggantinya.</p>
+
+          <div class="actions">
+            <button type="submit" id="saveButton">＋ Tambah dokumen</button>
+            <button type="button" class="light" id="cancelButton">Batal</button>
+          </div>
+        </form>
+        <p id="formStatus" class="status" role="status"></p>
+      </section>
+    </aside>
+  </div>
 </main>
 
-<footer>
-  Ruang Dokumen · Tempat berbagi dokumen dengan lebih mudah
-</footer>
+<footer>Ruang Dokumen · Tempat berbagi dokumen perkuliahan</footer>
 
 <script>
-  // KONFIGURASI SUPABASE
-  const SUPABASE_URL =
-    "https://chjmxkzhdiuaqhvxorzp.supabase.co";
+(function () {
+  'use strict';
 
-  const SUPABASE_KEY =
-    "sb_publishable__X_XM4-Gh4VJtkE3tM-NFw_Q2XDcIup";
+  const SUPABASE_URL = 'https://chjmxkzhdiuaqhvxorzp.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable__X_XM4-Gh4VJtkE3tM-NFw_Q2XDcIup';
+  const BUCKET = 'dokumen-kuliah';
+  const OWNER_UID = '56d11dcf-150f-4587-8a91-4ab4622dc607';
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+  const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'pptx'];
 
-  const BUCKET = "dokumen-kuliah";
-
-  const OWNER_UID =
-    "56d11dcf-150f-4587-8a91-4ab4622dc607";
-
-  const db = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
-
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const $ = id => document.getElementById(id);
 
-  let currentUser = null;
-  let documents = [];
+  let editingId = null;
+  let oldFilePath = null;
+  let busy = false;
+  let allDocuments = [];
+  let allDocumentsOwner = false;
 
-  function status(id, message, type = "info") {
-    $(id).innerHTML = "";
+  const setStatus = (id, message) => {
+    $(id).textContent = message;
+  };
 
-    if (!message) return;
+  const extension = name => name.split('.').pop().toLowerCase();
 
-    const div = document.createElement("div");
-    div.className = "status " + type;
-    div.textContent = message;
-
-    $(id).appendChild(div);
+  async function isOwner() {
+    const { data, error } = await db.auth.getSession();
+    return !error && !!data.session && data.session.user.id === OWNER_UID;
   }
 
-  function isOwner() {
-    return currentUser && currentUser.id === OWNER_UID;
-  }
+  async function updateView() {
+    const owner = await isOwner();
 
-  function refreshUI() {
-    const owner = isOwner();
+    $('loginForm').hidden = owner;
+    $('ownerLoggedIn').hidden = !owner;
+    $('formPanel').hidden = !owner;
+    $('roleLabel').textContent = owner ? 'Mode Pemilik' : 'Mode Pengunjung';
 
-    $("loginForm").classList.toggle("hidden", owner);
-    $("manageArea").classList.toggle("hidden", !owner);
-    $("logoutBtn").classList.toggle("hidden", !owner);
-
-    $("ownerHeading").textContent = owner
-      ? "Kelola Dokumen"
-      : "Area Pemilik";
-
-    $("ownerSubtitle").textContent = owner
-      ? "Anda dapat menambah, mengedit, dan menghapus dokumen."
-      : "Masuk untuk mengelola dokumen. Pengunjung tidak perlu login.";
-
-    $("ownerBadge").textContent = owner
-      ? "✓ Pemilik masuk"
-      : "🔐 Khusus pemilik";
-
-    renderDocuments();
-  }
-
-  async function loadSession() {
-    const { data } = await db.auth.getSession();
-
-    currentUser = data.session
-      ? data.session.user
-      : null;
-
-    refreshUI();
-  }
-
-  async function loadDocuments() {
-    $("docList").innerHTML =
-      '<div class="empty">Memuat dokumen...</div>';
-
-    const { data, error } = await db
-      .from("documents")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      $("docCount").textContent = "Gagal memuat";
-
-      $("docList").innerHTML =
-        '<div class="empty">Dokumen belum dapat dimuat.</div>';
-
-      status(
-        "publicStatus",
-        "Periksa tabel documents dan kebijakan akses publik SELECT di Supabase. " +
-        error.message,
-        "error"
-      );
-
-      return;
-    }
-
-    documents = data || [];
-
-    status("publicStatus", "");
-
-    renderDocuments();
-  }
-
-  function renderDocuments() {
-    if (!Array.isArray(documents)) return;
-
-    const query = $("searchInput").value.toLowerCase().trim();
-
-    const filtered = documents.filter(doc =>
-      (doc.title || "").toLowerCase().includes(query) ||
-      (doc.description || "").toLowerCase().includes(query) ||
-      (doc.file_name || "").toLowerCase().includes(query)
+    setStatus(
+      'authStatus',
+      owner
+        ? 'Kamu sudah masuk. Sekarang kamu bisa mengelola dokumen.'
+        : 'Pengunjung bisa melihat dokumen tanpa login. Pemilik perlu masuk untuk mengelola file.'
     );
 
-    $("docCount").textContent =
-      filtered.length + " dokumen";
-
-    if (filtered.length === 0) {
-      $("docList").innerHTML =
-        '<div class="empty">' +
-        (query
-          ? "Dokumen tidak ditemukan."
-          : "Belum ada dokumen yang diunggah.") +
-        "</div>";
-
-      return;
-    }
-
-    $("docList").innerHTML = "";
-
-    filtered.forEach(doc => {
-      const article = document.createElement("article");
-      article.className = "document";
-
-      const fileUrl = db.storage
-        .from(BUCKET)
-        .getPublicUrl(doc.file_path).data.publicUrl;
-
-      const date = doc.created_at
-        ? new Date(doc.created_at).toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "short",
-            year: "numeric"
-          })
-        : "";
-
-      const icon = document.createElement("div");
-      icon.className = "file-icon";
-      icon.textContent = "📄";
-
-      const content = document.createElement("div");
-      content.className = "doc-content";
-
-      const title = document.createElement("h3");
-      title.textContent = doc.title || "Dokumen";
-
-      const description = document.createElement("div");
-      description.className = "description";
-      description.textContent =
-        doc.description || "Tidak ada keterangan.";
-
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      meta.textContent =
-        (doc.file_name || "File") +
-        (date ? " · " + date : "");
-
-      const actions = document.createElement("div");
-      actions.className = "doc-actions";
-
-      const openLink = document.createElement("a");
-      openLink.className = "small-btn";
-      openLink.href = fileUrl;
-      openLink.target = "_blank";
-      openLink.rel = "noopener noreferrer";
-      openLink.textContent = "Buka dokumen ↗";
-
-      actions.appendChild(openLink);
-
-      if (isOwner()) {
-        const editButton = document.createElement("button");
-        editButton.className = "small-btn";
-        editButton.type = "button";
-        editButton.textContent = "Edit";
-        editButton.addEventListener("click", () => beginEdit(doc.id));
-
-        const deleteButton = document.createElement("button");
-        deleteButton.className = "small-btn";
-        deleteButton.style.background = "#fff0f0";
-        deleteButton.style.color = "#c62828";
-        deleteButton.type = "button";
-        deleteButton.textContent = "Hapus";
-        deleteButton.addEventListener("click", () => deleteDocument(doc.id));
-
-        actions.append(editButton, deleteButton);
-      }
-
-      content.append(title, description, meta, actions);
-      article.append(icon, content);
-      $("docList").appendChild(article);
-    });
+    return owner;
   }
 
-  // LOGIN PEMILIK
-  $("loginForm").addEventListener("submit", async event => {
-    event.preventDefault();
+  $('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
 
-    status("loginStatus", "Sedang masuk...", "info");
+    if (busy) return;
 
-    const email = $("email").value.trim();
-    const password = $("password").value;
+    $('loginButton').disabled = true;
+    setStatus('authStatus', 'Sedang masuk…');
 
-    const { data, error } = await db.auth.signInWithPassword({
-      email,
-      password
-    });
+    try {
+      const { error } = await db.auth.signInWithPassword({
+        email: $('email').value.trim(),
+        password: $('password').value
+      });
 
-    if (error) {
-      status("loginStatus", "Login gagal: " + error.message, "error");
-      return;
+      if (error) throw error;
+
+      if (!(await isOwner())) {
+        await db.auth.signOut();
+        throw new Error('Akun ini tidak memiliki akses pemilik. Periksa UID akun dan kebijakan akses.');
+      }
+
+      $('password').value = '';
+      await updateView();
+      await loadDocuments();
+
+    } catch (err) {
+      setStatus('authStatus', 'Gagal masuk: ' + err.message);
+    } finally {
+      $('loginButton').disabled = false;
     }
-
-    if (!data.user || data.user.id !== OWNER_UID) {
-      await db.auth.signOut();
-      currentUser = null;
-      refreshUI();
-
-      status(
-        "loginStatus",
-        "Akun ini tidak memiliki akses sebagai pemilik.",
-        "error"
-      );
-
-      return;
-    }
-
-    currentUser = data.user;
-    refreshUI();
-
-    status("loginStatus", "Berhasil masuk sebagai pemilik.", "success");
   });
 
-  // LOGOUT PEMILIK
-  $("logoutBtn").addEventListener("click", async () => {
+  $('logoutButton').addEventListener('click', async () => {
     const { error } = await db.auth.signOut();
 
     if (error) {
-      status("loginStatus", "Gagal keluar: " + error.message, "error");
+      setStatus('authStatus', 'Gagal keluar: ' + error.message);
       return;
     }
 
-    currentUser = null;
     resetForm();
-    refreshUI();
-
-    status("loginStatus", "Anda berhasil keluar.", "success");
+    await updateView();
+    await loadDocuments();
   });
 
-  // UNGGAH DAN EDIT DOKUMEN
-  $("uploadForm").addEventListener("submit", async event => {
-    event.preventDefault();
+  function resetForm() {
+    $('documentForm').reset();
+    editingId = null;
+    oldFilePath = null;
+    $('formTitle').textContent = 'Tambah dokumen';
+    $('saveButton').textContent = '＋ Tambah dokumen';
+    setStatus('formStatus', '');
+  }
 
-    if (!isOwner()) {
-      status("loginStatus", "Silakan login sebagai pemilik.", "error");
+  $('cancelButton').addEventListener('click', resetForm);
+
+  $('documentForm').addEventListener('submit', async e => {
+    e.preventDefault();
+
+    if (busy) return;
+
+    if (!(await isOwner())) {
+      setStatus('formStatus', 'Silakan masuk sebagai pemilik terlebih dahulu.');
+      await updateView();
       return;
     }
 
-    const title = $("title").value.trim();
-    const description = $("description").value.trim();
-    const file = $("file").files[0];
-    const editId = $("editId").value;
-    const oldPath = $("oldFilePath").value;
+    const title = $('documentName').value.trim();
+    const description = $('documentDescription').value.trim();
+    const file = $('documentFile').files[0];
 
     if (!title) {
-      status("loginStatus", "Judul dokumen wajib diisi.", "error");
+      setStatus('formStatus', 'Nama dokumen wajib diisi.');
       return;
     }
 
-    if (!editId && !file) {
-      status("loginStatus", "Silakan pilih file.", "error");
+    if (!editingId && !file) {
+      setStatus('formStatus', 'Pilih file dokumen terlebih dahulu.');
       return;
     }
 
-    $("saveBtn").disabled = true;
-    $("saveBtn").textContent = "Sedang menyimpan...";
+    if (file && !ALLOWED_EXTENSIONS.includes(extension(file.name))) {
+      setStatus('formStatus', 'Format file harus PDF, DOCX, atau PPTX.');
+      return;
+    }
 
-    let newPath = "";
-    let uploadedNewFile = false;
+    if (file && file.size > MAX_FILE_SIZE) {
+      setStatus('formStatus', 'Ukuran file maksimal 10 MB.');
+      return;
+    }
+
+    busy = true;
+    $('saveButton').disabled = true;
+
+    let uploadedPath = null;
+    setStatus('formStatus', 'Sedang menyimpan dokumen…');
 
     try {
-      let filePath = oldPath;
-      let fileName = documents.find(d => d.id === editId)?.file_name || "";
+      let filePath = oldFilePath;
+      let fileName = null;
 
       if (file) {
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        filePath = Date.now() + '-' + crypto.randomUUID() + '-' + safeName;
 
-        filePath =
-          currentUser.id + "/" + Date.now() + "-" + safeName;
+        const up = await db.storage.from(BUCKET).upload(filePath, file, {
+          upsert: false
+        });
 
-        newPath = filePath;
+        if (up.error) throw up.error;
 
-        const { error: uploadError } = await db.storage
-          .from(BUCKET)
-          .upload(filePath, file, {
-            cacheControl: "3600",
-            upsert: false
-          });
-
-        if (uploadError) {
-          throw new Error("Gagal mengunggah file: " + uploadError.message);
-        }
-
-        uploadedNewFile = true;
+        uploadedPath = filePath;
         fileName = file.name;
       }
 
-      if (editId) {
-        const updateData = { title, description };
+      if (editingId) {
+        const data = { title, description };
 
         if (file) {
-          updateData.file_path = filePath;
-          updateData.file_name = fileName;
+          data.file_path = filePath;
+          data.file_name = fileName;
         }
 
-        const { error } = await db
-          .from("documents")
-          .update(updateData)
-          .eq("id", editId);
+        const upd = await db.from('documents').update(data).eq('id', editingId);
+        if (upd.error) throw upd.error;
 
-        if (error) {
-          throw new Error("Gagal memperbarui dokumen: " + error.message);
+        if (file && oldFilePath) {
+          const rem = await db.storage.from(BUCKET).remove([oldFilePath]);
+          if (rem.error) console.warn(rem.error.message);
         }
 
-        if (file && oldPath) {
-          const { error: removeError } = await db.storage
-            .from(BUCKET)
-            .remove([oldPath]);
-
-          if (removeError) {
-            console.warn("File lama belum terhapus:", removeError.message);
-          }
-        }
-
-        status("loginStatus", "Dokumen berhasil diperbarui.", "success");
+        resetForm();
+        setStatus('formStatus', 'Dokumen berhasil diperbarui.');
 
       } else {
-        const { error } = await db
-          .from("documents")
-          .insert({
-            title,
-            description,
-            file_path: filePath,
-            file_name: fileName
-          });
+        const ins = await db.from('documents').insert({
+          title,
+          description,
+          file_path: filePath,
+          file_name: fileName
+        });
 
-        if (error) {
-          throw new Error("Gagal menyimpan data dokumen: " + error.message);
-        }
+        if (ins.error) throw ins.error;
 
-        status(
-          "loginStatus",
-          "Dokumen berhasil diunggah dan dapat dilihat pengunjung.",
-          "success"
-        );
+        resetForm();
+        setStatus('formStatus', 'Dokumen berhasil diunggah.');
       }
 
-      resetForm();
       await loadDocuments();
 
-    } catch (error) {
-      if (uploadedNewFile && newPath) {
-        await db.storage.from(BUCKET).remove([newPath]);
+    } catch (err) {
+      if (uploadedPath) {
+        await db.storage.from(BUCKET).remove([uploadedPath]);
       }
 
-      status(
-        "loginStatus",
-        error.message || "Terjadi kesalahan.",
-        "error"
-      );
+      setStatus('formStatus', 'Gagal menyimpan: ' + err.message);
 
     } finally {
-      $("saveBtn").disabled = false;
-
-      $("saveBtn").textContent = $("editId").value
-        ? "Simpan perubahan"
-        : "+ Unggah dokumen";
+      busy = false;
+      $('saveButton').disabled = false;
     }
   });
 
-  function beginEdit(id) {
-    if (!isOwner()) return;
+  function startEdit(doc) {
+    editingId = doc.id;
+    oldFilePath = doc.file_path;
 
-    const doc = documents.find(item => item.id === id);
+    $('documentName').value = doc.title || '';
+    $('documentDescription').value = doc.description || '';
+    $('documentFile').value = '';
+    $('formTitle').textContent = 'Edit dokumen';
+    $('saveButton').textContent = 'Simpan perubahan';
 
-    if (!doc) return;
-
-    $("editId").value = doc.id;
-    $("oldFilePath").value = doc.file_path;
-    $("title").value = doc.title || "";
-    $("description").value = doc.description || "";
-    $("file").value = "";
-
-    $("saveBtn").textContent = "Simpan perubahan";
-    $("cancelBtn").classList.remove("hidden");
-
-    $("ownerPanel").scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
+    setStatus('formStatus', 'Pilih file baru hanya jika ingin mengganti file lama.');
+    $('formPanel').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  function resetForm() {
-    $("uploadForm").reset();
-    $("editId").value = "";
-    $("oldFilePath").value = "";
+  async function deleteDocument(doc) {
+    if (busy || !confirm('Hapus dokumen "' + doc.title + '"?')) return;
 
-    $("saveBtn").textContent = "+ Unggah dokumen";
-    $("cancelBtn").classList.add("hidden");
-  }
-
-  $("cancelBtn").addEventListener("click", resetForm);
-
-  // HAPUS DOKUMEN
-  async function deleteDocument(id) {
-    if (!isOwner()) return;
-
-    const doc = documents.find(item => item.id === id);
-
-    if (!doc) return;
-
-    const confirmed = confirm(
-      'Apakah Anda yakin ingin menghapus "' + doc.title + '"?'
-    );
-
-    if (!confirmed) return;
-
-    status("loginStatus", "Menghapus dokumen...", "info");
-
-    const { error } = await db
-      .from("documents")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      status("loginStatus", "Gagal menghapus: " + error.message, "error");
+    if (!(await isOwner())) {
+      setStatus('listStatus', 'Silakan masuk sebagai pemilik.');
       return;
     }
 
-    const { error: fileError } = await db.storage
-      .from(BUCKET)
-      .remove([doc.file_path]);
+    busy = true;
+    setStatus('listStatus', 'Sedang menghapus dokumen…');
 
-    if (fileError) {
-      status(
-        "loginStatus",
-        "Data dokumen terhapus, tetapi file penyimpanan perlu diperiksa.",
-        "info"
+    try {
+      const row = await db.from('documents').delete().eq('id', doc.id);
+      if (row.error) throw row.error;
+
+      const file = await db.storage.from(BUCKET).remove([doc.file_path]);
+
+      await loadDocuments();
+
+      setStatus(
+        'listStatus',
+        file.error
+          ? 'Data terhapus, tetapi file belum terhapus: ' + file.error.message
+          : 'Dokumen berhasil dihapus.'
       );
-    } else {
-      status("loginStatus", "Dokumen berhasil dihapus.", "success");
+
+    } catch (err) {
+      setStatus('listStatus', 'Gagal menghapus: ' + err.message);
+    } finally {
+      busy = false;
+    }
+  }
+
+  function renderDocuments() {
+    const list = $('documentsList');
+    list.replaceChildren();
+
+    const query = $('documentSearch').value.trim().toLocaleLowerCase();
+
+    const docs = allDocuments.filter(doc =>
+      [doc.title, doc.description, doc.file_name].some(value =>
+        (value || '').toLocaleLowerCase().includes(query)
+      )
+    );
+
+    $('documentCount').textContent = query
+      ? docs.length + ' dari ' + allDocuments.length + ' dokumen'
+      : allDocuments.length + ' dokumen';
+
+    if (!allDocuments.length) {
+      setStatus('listStatus', '');
+
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.innerHTML = '<div style="font-size:28px">📂</div><strong>Belum ada dokumen</strong><br>Dokumen yang diunggah pemilik akan tampil di sini.';
+      list.append(empty);
+      return;
     }
 
-    await loadDocuments();
+    if (!docs.length) {
+      setStatus('listStatus', 'Tidak ada dokumen yang cocok dengan pencarian "' + $('documentSearch').value.trim() + '".');
+      return;
+    }
+
+    setStatus('listStatus', query
+      ? 'Hasil pencarian dokumen.'
+      : 'Pilih dokumen untuk membuka atau melihatnya.'
+    );
+
+    docs.forEach(doc => {
+      const card = document.createElement('article');
+      card.className = 'doc';
+
+      const badge = document.createElement('div');
+      badge.className = 'filebadge';
+      badge.textContent = extension(doc.file_name || doc.file_path || 'FILE').toUpperCase();
+
+      const title = document.createElement('h3');
+      title.className = 'doctitle';
+      title.textContent = doc.title || doc.file_name || 'Dokumen';
+
+      const desc = document.createElement('p');
+      desc.className = 'docdesc';
+      desc.textContent = doc.description || 'Tidak ada keterangan untuk dokumen ini.';
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.textContent = doc.file_name || '';
+
+      const actions = document.createElement('div');
+      actions.className = 'docactions';
+
+      const url = db.storage.from(BUCKET).getPublicUrl(doc.file_path).data.publicUrl;
+
+      const link = document.createElement('a');
+      link.className = 'filelink';
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = '↗ Buka / Lihat';
+
+      actions.append(link);
+      card.append(badge, title, desc, meta, actions);
+
+      if (allDocumentsOwner) {
+        const edit = document.createElement('button');
+        edit.type = 'button';
+        edit.className = 'light';
+        edit.textContent = 'Edit';
+        edit.addEventListener('click', () => startEdit(doc));
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'danger';
+        del.textContent = 'Hapus';
+        del.addEventListener('click', () => deleteDocument(doc));
+
+        actions.append(edit, del);
+      }
+
+      list.append(card);
+    });
   }
 
-  // PENCARIAN DOKUMEN
-  $("searchInput").addEventListener("input", renderDocuments);
+  $('documentSearch').addEventListener('input', renderDocuments);
 
-  // PERBARUI TAMPILAN JIKA STATUS LOGIN BERUBAH
-  db.auth.onAuthStateChange((_event, session) => {
-    currentUser = session?.user || null;
-    refreshUI();
+  async function loadDocuments() {
+    setStatus('listStatus', 'Sedang memuat dokumen…');
+
+    const owner = await isOwner();
+
+    const { data, error } = await db
+      .from('documents')
+      .select('id,title,description,file_path,file_name,created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      setStatus(
+        'listStatus',
+        'Tidak bisa memuat dokumen. Pastikan kebijakan SELECT untuk pengunjung sudah aktif. Detail: ' + error.message
+      );
+      $('documentCount').textContent = 'Dokumen belum termuat';
+      return;
+    }
+
+    allDocuments = data || [];
+    allDocumentsOwner = owner;
+    renderDocuments();
+  }
+
+  db.auth.onAuthStateChange(() => {
+    setTimeout(async () => {
+      await updateView();
+      await loadDocuments();
+    }, 0);
   });
 
-  // JALANKAN WEBSITE
-  async function init() {
-    await loadSession();
-    await loadDocuments();
-  }
-
-  init();
+  updateView().then(loadDocuments);
+})();
 </script>
-
 </body>
 </html>
