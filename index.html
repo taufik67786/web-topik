@@ -1,868 +1,372 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ruang Dokumen</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+// ===== PENGATURAN FOLDER DAN DOKUMEN =====
 
-<style>
-:root {
-  --blue: #2563eb;
-  --dark: #172554;
-  --muted: #64748b;
-  --line: #e2e8f0;
-  --bg: #f4f7fb;
+let allDocuments = [];
+let allFolders = [];
+let allDocumentsOwner = false;
+let currentFolder = null;
+let busy = false;
+
+const $ = id => document.getElementById(id);
+
+function extension(name) {
+  const parts = (name || "").split(".");
+  return parts.length > 1 ? parts.pop().toLowerCase() : "file";
 }
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  color: var(--dark);
-  background: var(--bg);
+
+function setStatus(id, message) {
+  $(id).textContent = message;
 }
-header {
-  padding: 30px 5%;
-  color: white;
-  background: linear-gradient(130deg, #172554, #2563eb, #60a5fa);
-}
-header h1 { margin: 20px 0 10px; }
-header p { color: #dbeafe; line-height: 1.6; }
-.brand { font-size: 20px; font-weight: bold; }
-nav {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: white;
-  padding: 16px 5%;
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-nav a {
-  text-decoration: none;
-  color: var(--blue);
-  font-weight: bold;
-  margin-right: 16px;
-}
-main { width: 92%; max-width: 1150px; margin: 30px auto; }
-.layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 20px;
-  align-items: start;
-}
-.panel {
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 22px;
-  margin-bottom: 20px;
-}
-h2 { margin-top: 0; }
-.sub { color: var(--muted); font-size: 14px; line-height: 1.6; }
-label {
-  display: block;
-  font-weight: bold;
-  font-size: 13px;
-  margin: 15px 0 7px;
-}
-input, textarea, select {
-  width: 100%;
-  padding: 12px;
-  font: inherit;
-  font-size: 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 9px;
-  background: white;
-}
-textarea { min-height: 80px; resize: vertical; }
-button, .filelink {
-  border: 0;
-  border-radius: 9px;
-  padding: 11px 14px;
-  background: var(--blue);
-  color: white;
-  font: inherit;
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-button:hover, .filelink:hover { background: #1d4ed8; }
-button:disabled { opacity: .6; cursor: wait; }
-.light { background: #eff6ff; color: #1d4ed8; }
-.light:hover { background: #dbeafe; }
-.danger { background: #fff1f2; color: #be123c; }
-.danger:hover { background: #ffe4e6; }
-.gray { background: #e2e8f0; color: #334155; }
-.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 15px; }
-.search { margin-bottom: 15px; }
-.crumb {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 18px 0 10px;
-}
-.folder-tools { display: flex; gap: 8px; margin-top: 12px; }
-.folder-tools input { flex: 1; min-width: 0; }
-.folder-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 15px;
-}
-.folder-card {
-  width: 100%;
-  min-width: 0;
-  text-align: left;
-  background: white;
-  color: var(--dark);
-  border: 1px solid var(--line);
-  padding: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.folder-card:hover { background: #eff6ff; border-color: #bfdbfe; }
-.folder-icon { font-size: 28px; }
-.folder-card strong { display: block; overflow-wrap: anywhere; }
-.folder-card small { display: block; color: var(--muted); margin-top: 5px; }
-.document-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 15px;
-}
-.doc {
-  min-width: 0;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  padding: 15px;
-  background: white;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.filebadge {
-  background: #fee2e2;
-  color: #b91c1c;
-  border-radius: 8px;
-  padding: 12px;
-  width: fit-content;
-  font-size: 12px;
-  font-weight: bold;
-}
-.doctitle { margin: 0; overflow-wrap: anywhere; }
-.docdesc {
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  flex: 1;
-}
-.meta { color: #94a3b8; font-size: 11px; overflow-wrap: anywhere; }
-.docactions { display: flex; flex-wrap: wrap; gap: 7px; }
-.status { font-size: 13px; color: var(--muted); line-height: 1.6; margin-top: 12px; }
-.empty {
-  text-align: center;
-  padding: 25px 12px;
-  margin-top: 15px;
-  border: 1px dashed #cbd5e1;
-  border-radius: 12px;
-  color: var(--muted);
-  line-height: 1.7;
-}
-.ownerstate {
-  background: #f8fafc;
-  border-radius: 10px;
-  padding: 12px;
-  margin: 12px 0;
-}
-.hint { font-size: 12px; color: var(--muted); line-height: 1.6; }
-footer { text-align: center; color: #94a3b8; padding: 25px; font-size: 12px; }
-[hidden] { display: none !important; }
 
-@media (max-width: 850px) {
-  .layout { grid-template-columns: 1fr; }
-}
-@media (max-width: 560px) {
-  .folder-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .document-list { grid-template-columns: 1fr; }
-  .panel { padding: 16px; }
-  .folder-tools { flex-direction: column; }
-}
-</style>
-</head>
+// ===== CARI FOLDER PADA PILIHAN SIMPAN =====
 
-<body>
-<header>
-  <div class="brand">▤ Ruang Dokumen</div>
-  <h1>Dokumen tugas lebih rapi dan mudah diakses.</h1>
-  <p>Buka folder, temukan dokumen, dan lihat materi yang dibagikan.</p>
-</header>
+// Tambahkan input pencarian sebelum elemen select documentFolder di HTML:
+// <input id="folderSearch" placeholder="Cari folder...">
 
-<nav>
-  <div>
-    <a href="#dokumen">⌂ Dokumen</a>
-    <a href="#areaPemilik">♙ Area Pemilik</a>
-  </div>
-</nav>
+function renderFolderOptions() {
+  const select = $("documentFolder");
+  const search = $("folderSearch");
+  if (!select) return;
 
-<main>
-  <div class="layout">
+  const query = search ? search.value.trim().toLowerCase() : "";
+  const previous = select.value;
 
-    <section class="panel" id="dokumen">
-      <h2>Dokumen tersedia</h2>
-      <p class="sub">Klik folder untuk melihat dokumen di dalamnya.</p>
+  select.replaceChildren();
 
-      <label for="documentSearch">Cari dokumen</label>
-      <input class="search" id="documentSearch" type="search"
-        placeholder="Cari nama dokumen, keterangan, atau file...">
+  const rootOption = document.createElement("option");
+  rootOption.value = "";
+  rootOption.textContent = "Tanpa folder (tampil di halaman utama)";
+  select.append(rootOption);
 
-      <div class="crumb">
-        <button type="button" class="light" id="backFolders" hidden>
-          ← Semua folder
-        </button>
-        <strong id="currentFolderName">Semua folder</strong>
-        <span id="documentCount" class="sub"></span>
-      </div>
-
-      <div id="folderTools" class="folder-tools" hidden>
-        <input id="newFolderName" type="text" placeholder="Nama folder baru">
-        <button type="button" id="createFolderButton">＋ Buat folder</button>
-      </div>
-
-      <div id="foldersList" class="folder-grid"></div>
-      <div id="listStatus" class="status">Memuat dokumen...</div>
-      <div id="documentsList" class="document-list"></div>
-    </section>
-
-    <aside class="panel" id="areaPemilik">
-      <h2>Area Pemilik</h2>
-      <p class="sub">Masuk untuk mengelola folder dan dokumen.</p>
-
-      <form id="loginForm">
-        <label for="email">Email</label>
-        <input id="email" type="email" autocomplete="username" required>
-
-        <label for="password">Kata sandi</label>
-        <input id="password" type="password" autocomplete="current-password" required>
-
-        <div class="actions">
-          <button type="submit" id="loginButton">Masuk</button>
-        </div>
-      </form>
-
-      <div id="ownerLoggedIn" hidden>
-        <div class="ownerstate">✓ Berhasil masuk sebagai pemilik.</div>
-        <button type="button" class="gray" id="logoutButton">Keluar</button>
-      </div>
-
-      <p id="authStatus" class="status">Pengunjung dapat melihat dokumen tanpa login.</p>
-
-      <section id="formPanel" hidden>
-        <hr style="border:0;border-top:1px solid #e2e8f0;margin:22px 0">
-
-        <h2 id="formTitle">Tambah dokumen</h2>
-
-        <form id="documentForm">
-          <label for="documentName">Nama dokumen</label>
-          <input id="documentName" type="text" placeholder="Contoh: Materi Basis Data" required>
-
-          <label for="documentDescription">Keterangan</label>
-          <textarea id="documentDescription" placeholder="Penjelasan singkat dokumen"></textarea>
-
-          <label for="documentFolder">Simpan ke folder</label>
-          <select id="documentFolder" required>
-            <option value="Umum">Umum</option>
-          </select>
-
-          <label for="documentFile">Pilih file</label>
-          <input id="documentFile" type="file" accept=".pdf,.docx,.pptx">
-
-          <p class="hint">Format PDF, DOCX, atau PPTX. Ukuran maksimal 10 MB. Saat mengedit, pilih file baru hanya jika ingin mengganti file lama.</p>
-
-          <div class="actions">
-            <button type="submit" id="saveButton">＋ Tambah dokumen</button>
-            <button type="button" class="light" id="cancelButton">Batal</button>
-          </div>
-        </form>
-
-        <p id="formStatus" class="status"></p>
-      </section>
-    </aside>
-
-  </div>
-</main>
-
-<footer>Ruang Dokumen · Tempat berbagi dokumen perkuliahan</footer>
-
-<script>
-(() => {
-  'use strict';
-
-  const SUPABASE_URL = 'https://chjmxkzhdiuaqhvxorzp.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable__X_XM4-Gh4VJtkE3tM-NFw_Q2XDcIup';
-  const BUCKET = 'dokumen-kuliah';
-  const OWNER_UID = '56d11dcf-150f-4587-8a91-4ab4622dc607';
-
-  const MAX_FILE_SIZE = 10 * 1024 * 1024;
-  const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'pptx'];
-
-  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  const $ = id => document.getElementById(id);
-
-  let editingId = null;
-  let oldFilePath = null;
-  let busy = false;
-  let allDocuments = [];
-  let allFolders = [];
-  let currentFolder = null;
-  let allDocumentsOwner = false;
-
-  const setStatus = (id, message) => {
-    $(id).textContent = message;
-  };
-
-  const extension = name => {
-    const parts = (name || '').split('.');
-    return parts.length > 1 ? parts.pop().toLowerCase() : 'file';
-  };
-
-  async function isOwner() {
-    const { data, error } = await db.auth.getSession();
-    return !error && !!data.session &&
-      data.session.user.id === OWNER_UID;
-  }
-
-  async function updateView() {
-    const owner = await isOwner();
-
-    $('loginForm').hidden = owner;
-    $('ownerLoggedIn').hidden = !owner;
-    $('formPanel').hidden = !owner;
-
-    $('folderTools').hidden = !owner || currentFolder !== null ||
-      !!$('documentSearch').value.trim();
-
-    setStatus(
-      'authStatus',
-      owner
-        ? 'Kamu sudah masuk dan dapat mengelola dokumen.'
-        : 'Pengunjung dapat melihat dokumen tanpa login.'
-    );
-
-    return owner;
-  }
-
-  $('loginForm').addEventListener('submit', async event => {
-    event.preventDefault();
-    if (busy) return;
-
-    $('loginButton').disabled = true;
-    setStatus('authStatus', 'Sedang masuk...');
-
-    try {
-      const { error } = await db.auth.signInWithPassword({
-        email: $('email').value.trim(),
-        password: $('password').value
-      });
-
-      if (error) throw error;
-
-      if (!(await isOwner())) {
-        await db.auth.signOut();
-        throw new Error('Akun ini tidak memiliki akses pemilik.');
-      }
-
-      $('password').value = '';
-      await updateView();
-      await loadDocuments();
-    } catch (error) {
-      setStatus('authStatus', 'Gagal masuk: ' + error.message);
-    } finally {
-      $('loginButton').disabled = false;
-    }
-  });
-
-  $('logoutButton').addEventListener('click', async () => {
-    const { error } = await db.auth.signOut();
-
-    if (error) {
-      setStatus('authStatus', 'Gagal keluar: ' + error.message);
-      return;
-    }
-
-    resetForm();
-    await updateView();
-    await loadDocuments();
-  });
-
-  function resetForm() {
-    $('documentForm').reset();
-    editingId = null;
-    oldFilePath = null;
-    $('formTitle').textContent = 'Tambah dokumen';
-    $('saveButton').textContent = '＋ Tambah dokumen';
-    $('documentFolder').value = currentFolder || 'Umum';
-    setStatus('formStatus', '');
-  }
-
-  $('cancelButton').addEventListener('click', resetForm);
-
-  $('documentForm').addEventListener('submit', async event => {
-    event.preventDefault();
-
-    if (busy) return;
-
-    if (!(await isOwner())) {
-      setStatus('formStatus', 'Silakan masuk terlebih dahulu.');
-      await updateView();
-      return;
-    }
-
-    const title = $('documentName').value.trim();
-    const description = $('documentDescription').value.trim();
-    const folder = $('documentFolder').value;
-    const file = $('documentFile').files[0];
-
-    if (!title) {
-      setStatus('formStatus', 'Nama dokumen wajib diisi.');
-      return;
-    }
-
-    if (!editingId && !file) {
-      setStatus('formStatus', 'Pilih file dokumen terlebih dahulu.');
-      return;
-    }
-
-    if (file && !ALLOWED_EXTENSIONS.includes(extension(file.name))) {
-      setStatus('formStatus', 'Format file harus PDF, DOCX, atau PPTX.');
-      return;
-    }
-
-    if (file && file.size > MAX_FILE_SIZE) {
-      setStatus('formStatus', 'Ukuran file maksimal 10 MB.');
-      return;
-    }
-
-    busy = true;
-    $('saveButton').disabled = true;
-    setStatus('formStatus', 'Sedang menyimpan dokumen...');
-
-    let uploadedPath = null;
-
-    try {
-      let filePath = oldFilePath;
-      let fileName = null;
-
-      if (file) {
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        filePath = Date.now() + '-' + crypto.randomUUID() + '-' + safeName;
-
-        const upload = await db.storage
-          .from(BUCKET)
-          .upload(filePath, file, { upsert: false });
-
-        if (upload.error) throw upload.error;
-
-        uploadedPath = filePath;
-        fileName = file.name;
-      }
-
-      if (editingId) {
-        const data = { title, description, folder };
-
-        if (file) {
-          data.file_path = filePath;
-          data.file_name = fileName;
-        }
-
-        const result = await db
-          .from('documents')
-          .update(data)
-          .eq('id', editingId);
-
-        if (result.error) throw result.error;
-
-        if (file && oldFilePath) {
-          await db.storage.from(BUCKET).remove([oldFilePath]);
-        }
-
-        resetForm();
-        setStatus('formStatus', 'Dokumen berhasil diperbarui.');
-      } else {
-        const result = await db.from('documents').insert({
-          title,
-          description,
-          folder,
-          file_path: filePath,
-          file_name: fileName
-        });
-
-        if (result.error) throw result.error;
-
-        resetForm();
-        setStatus('formStatus', 'Dokumen berhasil diunggah.');
-      }
-
-      await loadDocuments();
-    } catch (error) {
-      if (uploadedPath) {
-        await db.storage.from(BUCKET).remove([uploadedPath]);
-      }
-
-      setStatus('formStatus', 'Gagal menyimpan: ' + error.message);
-    } finally {
-      busy = false;
-      $('saveButton').disabled = false;
-    }
-  });
-
-  function startEdit(doc) {
-    editingId = doc.id;
-    oldFilePath = doc.file_path;
-
-    $('documentName').value = doc.title || '';
-    $('documentDescription').value = doc.description || '';
-    $('documentFolder').value = doc.folder || 'Umum';
-    $('documentFile').value = '';
-
-    $('formTitle').textContent = 'Edit dokumen';
-    $('saveButton').textContent = 'Simpan perubahan';
-
-    setStatus('formStatus', 'Pilih file baru hanya jika ingin mengganti file lama.');
-    $('formPanel').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-
-  async function deleteDocument(doc) {
-    if (busy || !confirm('Hapus dokumen "' + doc.title + '"?')) return;
-
-    if (!(await isOwner())) {
-      setStatus('listStatus', 'Silakan masuk sebagai pemilik.');
-      return;
-    }
-
-    busy = true;
-    setStatus('listStatus', 'Sedang menghapus dokumen...');
-
-    try {
-      const result = await db.from('documents').delete().eq('id', doc.id);
-      if (result.error) throw result.error;
-
-      const fileResult = await db.storage.from(BUCKET).remove([doc.file_path]);
-
-      await loadDocuments();
-
-      setStatus(
-        'listStatus',
-        fileResult.error
-          ? 'Dokumen terhapus, tetapi file belum terhapus dari penyimpanan.'
-          : 'Dokumen berhasil dihapus.'
-      );
-    } catch (error) {
-      setStatus('listStatus', 'Gagal menghapus: ' + error.message);
-    } finally {
-      busy = false;
-    }
-  }
-
-  function renderFolders() {
-    const host = $('foldersList');
-    host.replaceChildren();
-
-    const query = $('documentSearch').value.trim().toLocaleLowerCase();
-    const searching = !!query;
-
-    host.hidden = searching || currentFolder !== null;
-    $('backFolders').hidden = currentFolder === null && !searching;
-
-    $('currentFolderName').textContent = searching
-      ? 'Hasil pencarian'
-      : (currentFolder || 'Semua folder');
-
-    $('folderTools').hidden =
-      !allDocumentsOwner || searching || currentFolder !== null;
-
-    if (searching || currentFolder !== null) return;
-
-    allFolders.forEach(folder => {
-      const card = document.createElement('button');
-      card.type = 'button';
-      card.className = 'folder-card';
-
-      const icon = document.createElement('span');
-      icon.className = 'folder-icon';
-      icon.textContent = '📁';
-
-      const info = document.createElement('span');
-      const name = document.createElement('strong');
-      name.textContent = folder.name;
-
-      const count = document.createElement('small');
-      count.textContent =
-        allDocuments.filter(doc => (doc.folder || 'Umum') === folder.name).length +
-        ' dokumen';
-
-      info.append(name, count);
-      card.append(icon, info);
-
-      card.addEventListener('click', () => {
-        currentFolder = folder.name;
-        $('documentSearch').value = '';
-        renderDocuments();
-      });
-
-      host.append(card);
-    });
-
-    if (!allFolders.length) {
-      const empty = document.createElement('div');
-      empty.className = 'empty';
-      empty.textContent = 'Belum ada folder.';
-      host.append(empty);
-    }
-  }
-
-  function renderDocuments() {
-    const list = $('documentsList');
-    list.replaceChildren();
-
-    const query = $('documentSearch').value.trim().toLocaleLowerCase();
-
-    renderFolders();
-
-    let docs = allDocuments.filter(doc =>
-      [doc.title, doc.description, doc.file_name, doc.folder]
-        .some(value => (value || '').toLocaleLowerCase().includes(query))
-    );
-
-    if (!query && currentFolder !== null) {
-      docs = docs.filter(doc => (doc.folder || 'Umum') === currentFolder);
-    }
-
-    $('documentCount').textContent = query
-      ? docs.length + ' hasil'
-      : docs.length + ' dokumen';
-
-    if (!docs.length) {
-      setStatus('listStatus', '');
-
-      const empty = document.createElement('div');
-      empty.className = 'empty';
-
-      const title = document.createElement('strong');
-      title.textContent = query
-        ? 'Tidak ada hasil pencarian'
-        : currentFolder !== null
-          ? 'Folder ini masih kosong'
-          : 'Belum ada dokumen';
-
-      empty.append(title);
-      list.append(empty);
-      return;
-    }
-
-    setStatus(
-      'listStatus',
-      query ? 'Hasil pencarian dari semua folder.' : 'Pilih dokumen untuk membukanya.'
-    );
-
-    docs.forEach(doc => {
-      const card = document.createElement('article');
-      card.className = 'doc';
-
-      const badge = document.createElement('div');
-      badge.className = 'filebadge';
-      badge.textContent = extension(doc.file_name || doc.file_path).toUpperCase();
-
-      const title = document.createElement('h3');
-      title.className = 'doctitle';
-      title.textContent = doc.title || doc.file_name || 'Dokumen';
-
-      const description = document.createElement('p');
-      description.className = 'docdesc';
-      description.textContent = doc.description || 'Tidak ada keterangan.';
-
-      const meta = document.createElement('div');
-      meta.className = 'meta';
-
-      const date = doc.created_at
-        ? new Date(doc.created_at).toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-          })
-        : 'Tanggal tidak tersedia';
-
-      meta.textContent = '📅 ' + date + ' · Folder: ' + (doc.folder || 'Umum');
-
-      const actions = document.createElement('div');
-      actions.className = 'docactions';
-
-      const url = db.storage.from(BUCKET).getPublicUrl(doc.file_path).data.publicUrl;
-
-      const link = document.createElement('a');
-      link.className = 'filelink';
-      link.href = url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = '↗ Buka / Lihat';
-
-      actions.append(link);
-      card.append(badge, title, description, meta, actions);
-
-      if (allDocumentsOwner) {
-        const edit = document.createElement('button');
-        edit.type = 'button';
-        edit.className = 'light';
-        edit.textContent = 'Edit';
-        edit.addEventListener('click', () => startEdit(doc));
-
-        const del = document.createElement('button');
-        del.type = 'button';
-        del.className = 'danger';
-        del.textContent = 'Hapus';
-        del.addEventListener('click', () => deleteDocument(doc));
-
-        actions.append(edit, del);
-      }
-
-      list.append(card);
-    });
-  }
-
-  $('backFolders').addEventListener('click', () => {
-    currentFolder = null;
-    $('documentSearch').value = '';
-    renderDocuments();
-  });
-
-  $('createFolderButton').addEventListener('click', async () => {
-    if (!(await isOwner())) return;
-
-    const name = $('newFolderName').value.trim();
-
-    if (!name) {
-      alert('Masukkan nama folder.');
-      return;
-    }
-
-    if (allFolders.some(folder =>
-      folder.name.toLocaleLowerCase() === name.toLocaleLowerCase()
-    )) {
-      alert('Folder dengan nama tersebut sudah ada.');
-      return;
-    }
-
-    const { error } = await db.from('document_folders').insert({ name });
-
-    if (error) {
-      alert('Gagal membuat folder: ' + error.message);
-      return;
-    }
-
-    $('newFolderName').value = '';
-    await loadDocuments();
-  });
-
-  $('documentSearch').addEventListener('input', () => {
-    if ($('documentSearch').value.trim()) currentFolder = null;
-    renderDocuments();
-  });
-
-  async function loadDocuments() {
-    setStatus('listStatus', 'Sedang memuat dokumen...');
-
-    const owner = await isOwner();
-
-    const folderResult = await db
-      .from('document_folders')
-      .select('id,name,created_at')
-      .order('name', { ascending: true });
-
-    if (folderResult.error) {
-      setStatus(
-        'listStatus',
-        'Tabel folder belum tersedia. Buat tabel document_folders di Supabase. ' +
-        folderResult.error.message
-      );
-      $('documentCount').textContent = '';
-      return;
-    }
-
-    allFolders = folderResult.data || [];
-
-    const { data, error } = await db
-      .from('documents')
-      .select('id,title,description,folder,file_path,file_name,created_at')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      setStatus('listStatus', 'Gagal memuat dokumen: ' + error.message);
-      return;
-    }
-
-    allDocuments = data || [];
-    allDocumentsOwner = owner;
-
-    const names = new Set(allFolders.map(folder => folder.name));
-
-    for (const doc of allDocuments) {
-      const name = doc.folder || 'Umum';
-
-      if (!names.has(name)) {
-        allFolders.push({ name });
-        names.add(name);
-      }
-    }
-
-    if (!names.has('Umum')) {
-      allFolders.push({ name: 'Umum' });
-      names.add('Umum');
-    }
-
-    const select = $('documentFolder');
-    const previous = select.value;
-    select.replaceChildren();
-
-    allFolders.forEach(folder => {
-      const option = document.createElement('option');
+  allFolders
+    .filter(folder => folder.name.toLowerCase().includes(query))
+    .forEach(folder => {
+      const option = document.createElement("option");
       option.value = folder.name;
       option.textContent = folder.name;
       select.append(option);
     });
 
-    select.value = names.has(previous)
-      ? previous
-      : (currentFolder || 'Umum');
+  if ([...select.options].some(option => option.value === previous)) {
+    select.value = previous;
+  } else {
+    select.value = "";
+  }
+}
 
-    if (currentFolder && !allFolders.some(folder => folder.name === currentFolder)) {
+if ($("folderSearch")) {
+  $("folderSearch").addEventListener("input", renderFolderOptions);
+}
+
+// ===== MEMBUAT FOLDER =====
+
+async function createFolder() {
+  if (!(await isOwner())) {
+    alert("Silakan masuk sebagai pemilik.");
+    return;
+  }
+
+  const input = $("newFolderName");
+  const name = input.value.trim();
+
+  if (!name) {
+    alert("Masukkan nama folder.");
+    return;
+  }
+
+  if (allFolders.some(folder =>
+    folder.name.toLowerCase() === name.toLowerCase()
+  )) {
+    alert("Nama folder sudah digunakan.");
+    return;
+  }
+
+  const { error } = await db
+    .from("document_folders")
+    .insert({ name });
+
+  if (error) {
+    alert("Gagal membuat folder: " + error.message);
+    return;
+  }
+
+  input.value = "";
+  await loadDocuments();
+}
+
+$("createFolderButton").onclick = createFolder;
+
+// ===== MENGHAPUS FOLDER BESERTA DOKUMENNYA =====
+
+async function deleteFolder(folder) {
+  if (busy) return;
+
+  if (!(await isOwner())) {
+    alert("Silakan masuk sebagai pemilik.");
+    return;
+  }
+
+  const docs = allDocuments.filter(
+    doc => (doc.folder || "") === folder.name
+  );
+
+  const confirmed = confirm(
+    `Hapus folder "${folder.name}" beserta ${docs.length} dokumen di dalamnya? ` +
+    "Tindakan ini tidak dapat dibatalkan."
+  );
+
+  if (!confirmed) return;
+
+  busy = true;
+
+  try {
+    // Hapus data dokumen terlebih dahulu.
+    if (docs.length) {
+      const { error } = await db
+        .from("documents")
+        .delete()
+        .eq("folder", folder.name);
+
+      if (error) throw error;
+
+      // Hapus file dari Supabase Storage.
+      const paths = docs
+        .map(doc => doc.file_path)
+        .filter(Boolean);
+
+      if (paths.length) {
+        const { error: storageError } = await db
+          .storage
+          .from(BUCKET)
+          .remove(paths);
+
+        if (storageError) {
+          alert(
+            "Data dokumen sudah dihapus, tetapi sebagian file mungkin " +
+            "masih ada di penyimpanan: " + storageError.message
+          );
+        }
+      }
+    }
+
+    // Hapus folder setelah dokumen diproses.
+    const { error: folderError } = await db
+      .from("document_folders")
+      .delete()
+      .eq("id", folder.id);
+
+    if (folderError) throw folderError;
+
+    if (currentFolder === folder.name) {
       currentFolder = null;
     }
 
-    await updateView();
-    renderDocuments();
+    await loadDocuments();
+    setStatus("listStatus", "Folder berhasil dihapus.");
+  } catch (error) {
+    alert("Gagal menghapus folder: " + error.message);
+  } finally {
+    busy = false;
   }
+}
 
-  db.auth.onAuthStateChange(() => {
-    setTimeout(async () => {
-      await updateView();
-      await loadDocuments();
-    }, 0);
+// ===== MENAMPILKAN FOLDER =====
+
+function renderFolders() {
+  const host = $("foldersList");
+  host.replaceChildren();
+
+  const searching = !!$("documentSearch").value.trim();
+
+  host.hidden = searching || currentFolder !== null;
+  $("backFolders").hidden = currentFolder === null && !searching;
+
+  $("currentFolderName").textContent = searching
+    ? "Hasil pencarian"
+    : (currentFolder || "Semua folder");
+
+  $("folderTools").hidden =
+    !allDocumentsOwner || searching || currentFolder !== null;
+
+  if (searching || currentFolder !== null) return;
+
+  allFolders.forEach(folder => {
+    const card = document.createElement("div");
+    card.className = "folder-card";
+
+    const openButton = document.createElement("button");
+    openButton.type = "button";
+    openButton.className = "light";
+    openButton.style.flex = "1";
+    openButton.style.justifyContent = "flex-start";
+    openButton.textContent = "📁 " + folder.name;
+
+    const count = allDocuments.filter(
+      doc => doc.folder === folder.name
+    ).length;
+
+    const countLabel = document.createElement("small");
+    countLabel.textContent = count + " dokumen";
+
+    openButton.onclick = () => {
+      currentFolder = folder.name;
+      $("documentSearch").value = "";
+      renderDocuments();
+    };
+
+    card.append(openButton, countLabel);
+
+    if (allDocumentsOwner) {
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "danger";
+      deleteButton.textContent = "Hapus";
+      deleteButton.style.marginTop = "8px";
+      deleteButton.onclick = () => deleteFolder(folder);
+      card.append(deleteButton);
+    }
+
+    host.append(card);
+  });
+}
+
+// ===== MENAMPILKAN DOKUMEN =====
+
+function renderDocuments() {
+  const list = $("documentsList");
+  list.replaceChildren();
+
+  const query = $("documentSearch").value.trim().toLowerCase();
+
+  renderFolders();
+
+  let docs = allDocuments.filter(doc => {
+    const matchesSearch = [
+      doc.title,
+      doc.description,
+      doc.file_name,
+      doc.folder
+    ].some(value => (value || "").toLowerCase().includes(query));
+
+    if (!matchesSearch) return false;
+
+    if (query) return true;
+
+    // Di dalam folder, hanya tampilkan dokumen folder tersebut.
+    if (currentFolder !== null) {
+      return (doc.folder || "") === currentFolder;
+    }
+
+    // Halaman utama hanya menampilkan dokumen tanpa folder.
+    return !doc.folder;
   });
 
-  updateView().then(loadDocuments);
-})();
-</script>
-</body>
-</html>
+  $("documentCount").textContent = docs.length + " dokumen";
+
+  if (!docs.length) {
+    setStatus(
+      "listStatus",
+      query
+        ? "Dokumen tidak ditemukan."
+        : currentFolder
+          ? "Folder ini belum memiliki dokumen."
+          : "Belum ada dokumen tanpa folder."
+    );
+    return;
+  }
+
+  setStatus("listStatus", "");
+
+  docs.forEach(doc => {
+    const card = document.createElement("article");
+    card.className = "doc";
+
+    const title = document.createElement("h3");
+    title.className = "doctitle";
+    title.textContent = doc.title;
+
+    const description = document.createElement("p");
+    description.className = "docdesc";
+    description.textContent = doc.description || "Tidak ada keterangan.";
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent =
+      "📅 " +
+      (doc.created_at
+        ? new Date(doc.created_at).toLocaleDateString("id-ID")
+        : "Tanggal tidak tersedia") +
+      " · " + (doc.file_name || "");
+
+    const actions = document.createElement("div");
+    actions.className = "docactions";
+
+    const link = document.createElement("a");
+    link.className = "filelink";
+    link.href = db.storage.from(BUCKET).getPublicUrl(doc.file_path).data.publicUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = "Buka dokumen";
+    actions.append(link);
+
+    if (allDocumentsOwner) {
+      const edit = document.createElement("button");
+      edit.className = "light";
+      edit.textContent = "Edit";
+      edit.onclick = () => startEdit(doc);
+
+      const del = document.createElement("button");
+      del.className = "danger";
+      del.textContent = "Hapus";
+      del.onclick = () => deleteDocument(doc);
+
+      actions.append(edit, del);
+    }
+
+    card.append(title, description, meta, actions);
+    list.append(card);
+  });
+}
+
+// ===== MEMUAT DATA DARI SUPABASE =====
+
+async function loadDocuments() {
+  setStatus("listStatus", "Memuat dokumen...");
+
+  const owner = await isOwner();
+
+  const foldersResult = await db
+    .from("document_folders")
+    .select("id,name,created_at")
+    .order("name", { ascending: true });
+
+  if (foldersResult.error) {
+    setStatus(
+      "listStatus",
+      "Gagal memuat folder: " + foldersResult.error.message
+    );
+    return;
+  }
+
+  const docsResult = await db
+    .from("documents")
+    .select("id,title,description,folder,file_path,file_name,created_at")
+    .order("created_at", { ascending: false });
+
+  if (docsResult.error) {
+    setStatus(
+      "listStatus",
+      "Gagal memuat dokumen: " + docsResult.error.message
+    );
+    return;
+  }
+
+  allFolders = foldersResult.data || [];
+  allDocuments = docsResult.data || [];
+  allDocumentsOwner = owner;
+
+  renderFolderOptions();
+  renderDocuments();
+}
+
+// Muat ulang data saat halaman dibuka.
+loadDocuments();
